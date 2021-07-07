@@ -28,4 +28,9 @@ jobs:
         run: |
           pipenv run flake8 .
 
+      - name: Tests with Pytest
+        run: |
+          export PYTHONPATH=src
+          pipenv run pytest --cov=pypro
+
       - run: echo "This job's status is ${{ job.status }}."
