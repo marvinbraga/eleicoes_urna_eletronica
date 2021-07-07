@@ -35,13 +35,6 @@ class BlockchainManager(metaclass=Singleton):
         """
         return len(self._transactions) + 1
 
-    def _start_genesis(self):
-        """
-        This method creates the first block with the first transactions.
-        """
-        self.add_transactions(['0', settings.DEFAULT_START_TRANSACTION, settings.DEFAULT_START_HASH])
-        return self
-
     def add_transactions(self, transactions):
         """
         This method adds transactions to blocks.
@@ -50,6 +43,13 @@ class BlockchainManager(metaclass=Singleton):
         self._transactions.append(transactions)
         if settings.DEBUG:
             self._print_results()
+        return self
+
+    def _start_genesis(self):
+        """
+        This method creates the first block with the first transactions.
+        """
+        self.add_transactions(['0', settings.DEFAULT_START_TRANSACTION, settings.DEFAULT_START_HASH])
         return self
 
     def _get_old_hash(self):
