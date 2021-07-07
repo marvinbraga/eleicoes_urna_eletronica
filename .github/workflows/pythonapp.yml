@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      global:
+      global: |
         PIPENV_VENV_IN_PROJECT=1
         PIPENV_IGNORE_VIRTUALENVS=1
 
