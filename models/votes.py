@@ -4,11 +4,14 @@ Votes Model Module.
 """
 from datetime import datetime
 
+from utils.models.bases import Model
 
-class Vote:
+
+class Vote(Model):
     """ Class for vote information. """
 
     def __init__(self, order, party_number, candidate_number, candidate_type_code, election):
+        super().__init__(order, party_number, candidate_number, candidate_type_code, election)
         self._order = order
         self._party_number = party_number
         self._candidate_number = candidate_number
