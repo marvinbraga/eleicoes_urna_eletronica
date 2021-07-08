@@ -2,12 +2,14 @@
 """
 Elections Model Module.
 """
+from utils.models.bases import Model
 
 
-class Election:
+class Election(Model):
     """ Class for election information. """
 
     def __init__(self, election_code, state, city, zone, section, polling_place, urn_type_code):
+        super().__init__(election_code, state, city, zone, section, polling_place, urn_type_code)
         self._election_code = election_code
         self._state = state
         self._city = city
