@@ -50,7 +50,8 @@ def test_election_save_exists():
     election = get_election(1)
     try:
         election.save()
-    except:
+    except Exception as e:
+        print(e)
         assert False
     else:
         if os.path.isfile(election._filename):
