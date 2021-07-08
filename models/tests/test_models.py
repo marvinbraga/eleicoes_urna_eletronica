@@ -40,7 +40,8 @@ def test_election_save():
         os.remove(election._filename)
     try:
         election.save()
-    except:
+    except Exception as e:
+        print(e)
         assert False
     else:
         assert True
