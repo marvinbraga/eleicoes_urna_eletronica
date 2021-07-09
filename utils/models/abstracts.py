@@ -16,3 +16,13 @@ class AbstractModel(metaclass=ABCMeta):
         :return: Self.
         """
         pass
+
+    def _pop_attr(self, dct, name, obj):
+        """ Retira atributo do dict. """
+        dct.pop(name)
+        dct[name] = obj.as_dict()
+        return self
+
+    def as_dict(self):
+        """ Serialize to Json. """
+        return self.__dict__
