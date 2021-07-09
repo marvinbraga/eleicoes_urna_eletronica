@@ -19,6 +19,13 @@ class Vote(Model):
         self._date_time = datetime.now()
         self._election = election
 
+    def as_dict(self):
+        """ Serialize to JSon. """
+        result = self.__dict__.copy()
+        result.pop('_election')
+        result.pop('_date_time')
+        return result
+
     @property
     def data(self):
         """ Method for returning vote data. """
