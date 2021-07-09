@@ -5,9 +5,24 @@ Test Models
 
 import collections
 import os
+import random
 
+from models.ballot_boxes import BallotBoxModel
 from models.elections import Election
 from models.votes import Vote
+
+
+def save_model(model):
+    """ Save model """
+    if os.path.isfile(model.__dict__.get('_filename')):
+        os.remove(model.__dict__.get('_filename'))
+    try:
+        model.save()
+    except Exception as e:
+        print(e)
+        assert False
+    else:
+        assert True
 
 
 def get_election(index):
@@ -36,15 +51,7 @@ def test_vote_instance():
 
 def test_election_save():
     election = get_election(0)
-    if os.path.isfile(election._filename):
-        os.remove(election._filename)
-    try:
-        election.save()
-    except Exception as e:
-        print(e)
-        assert False
-    else:
-        assert True
+    save_model(election)
 
 
 def test_election_save_exists():
@@ -58,3 +65,12 @@ def test_election_save_exists():
         if os.path.isfile(election._filename):
             os.remove(election._filename)
         assert True
+
+
+def test_ballot_box_add_vote():
+    election = get_election(0)
+    votes = [Vote(i + 1, random.randint(1, 34), random.randint(1, 7), 1, election) for i in range(0, 20)]
+    ballot_box = BallotBoxModel(99, election, [])
+    for vote in votes:
+        ballot_box.add_vote(vote)
+    save_model(ballot_box)
