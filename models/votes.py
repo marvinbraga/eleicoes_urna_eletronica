@@ -30,4 +30,4 @@ class Vote(Model):
     def data(self):
         """ Method for returning vote data. """
         return [str(self._order), str(self._party_number), str(self._candidate_number),
-                str(self._candidate_type_code), str(self._date_time), *self._election.data]
+                str(self._candidate_type_code), *self._election.data]
