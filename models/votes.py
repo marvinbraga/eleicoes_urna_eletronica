@@ -4,7 +4,22 @@ Votes Model Module.
 """
 from datetime import datetime
 
+from utils.models.abstracts import AbstractDictSerializer
 from utils.models.bases import Model
+
+
+class VoteModelDictSerializer(AbstractDictSerializer):
+    """ Classe para serializar um Model para Dict.  """
+
+    def __init__(self, model):
+        self._model = model
+
+    def as_dict(self):
+        """ Converte Model para Dict """
+        result = self._model.__dict__.copy()
+        result.pop('_election')
+        result.pop('_date_time')
+        return result
 
 
 class Vote(Model):
@@ -21,10 +36,7 @@ class Vote(Model):
 
     def as_dict(self):
         """ Serialize to JSon. """
-        result = self.__dict__.copy()
-        result.pop('_election')
-        result.pop('_date_time')
-        return result
+        return VoteModelDictSerializer(self).as_dict()
 
     @property
     def data(self):
