@@ -5,6 +5,15 @@ Abstracts Models
 from abc import ABCMeta, abstractmethod
 
 
+class AbstractDictSerializer(metaclass=ABCMeta):
+    """ Classe abstrata de serialização de Model para Dict. """
+
+    @abstractmethod
+    def as_dict(self):
+        """ Executa a serialização. """
+        pass
+
+
 class AbstractModel(metaclass=ABCMeta):
     """ Class to abstract model. """
 
