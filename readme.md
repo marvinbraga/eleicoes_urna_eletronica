@@ -4,8 +4,12 @@ _Por Marcus Vinicius Braga_
 ## Votação
 - Gerar hash para conferência de cada voto registrado na urna com o capturado através do registro impresso.
 - O eleitor pode conferir seu voto através da tela da urna.
+- O registro impresso deve ser gerado a partir do registro salvo.  
 - O eleitor pode conferir seu voto através do registro impresso.
 - O voto é gravado sem informações do eleitor (garante o segredo do voto).
+
+### Processo de Cancelamento de Voto para Refazer Votação
+- Descrever processo. 
 
 ## Validação dos Votos
 - O escrutínio público pode ser executado utilizando o registro impresso do voto.
@@ -30,5 +34,6 @@ _Por Marcus Vinicius Braga_
 ## Processamento do Registro de Urna
 - O processamento da urna irá capturar o registro de urna e verificar se o hash gerado por estes dodos são identicos ao 
   hash do registro e, somente assim, poderá processá-lo.
+- Finalizado o processamento do registro de urna então o sistema salvará o registro o registro de urna juntamente com 
+  o hash gerado para sua contabilização juntamente com data e hora automática do servidor.
   
-
