@@ -2,11 +2,11 @@
 _Por Marcus Vinicius Braga_
 
 ## Votação
-- Gerar hash para conferência de cada voto registrado na urna com o capturado através do registro impresso.
+- Gerar o registro de voto e salvá-lo de acordo com a digitação, utilizando tecnologia Block Chain.
 - O eleitor pode conferir seu voto através da tela da urna.
-- O registro impresso deve ser gerado a partir do registro salvo.  
+- O registro impresso deve ser gerado a partir do registro salvo e não do digitado.  
 - O eleitor pode conferir seu voto através do registro impresso.
-- O voto é gravado sem informações do eleitor (garante o segredo do voto).
+- O voto fica gravado sem informações do eleitor (garante o segredo do voto).
 
 ### Processo de Cancelamento de Voto para Refazer Votação
 - Descrever processo. 
