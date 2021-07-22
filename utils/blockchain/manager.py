@@ -45,6 +45,10 @@ class BlockchainManager(metaclass=Singleton):
             self._print_results()
         return self
 
+    def last_block(self):
+        """ Get last block hash. """
+        return self._blocks[-1]
+
     def _start_genesis(self):
         """
         This method creates the first block with the first transactions.
