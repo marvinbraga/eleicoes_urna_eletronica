@@ -3,7 +3,6 @@
 Ballot Box Model Module.
 Marcus Vinicius Braga, 2021.
 """
-from utils.blockchain.manager import BlockchainManager
 from utils.models.abstracts import AbstractDictSerializer
 from utils.models.bases import Model
 
@@ -17,7 +16,6 @@ class BallotBoxModelDictSerializer(AbstractDictSerializer):
     def as_dict(self):
         """ Converte Model para Dict """
         result = self._model.__dict__.copy()
-        result.pop('_blockchain')
         self._model.pop_attr(result, '_election', self._model.election)
         votes = []
         for vote in self._model.votes:
@@ -32,7 +30,6 @@ class BallotBoxModel(Model):
 
     def __init__(self, code, election, candidates):
         super().__init__(code, election, candidates)
-        self._blockchain = BlockchainManager()
         self._candidates = candidates
         self._code = code
         self._election = election
@@ -59,5 +56,4 @@ class BallotBoxModel(Model):
     def add_vote(self, vote):
         """ Adiciona um voto à urna. """
         self._votes.append(vote)
-        self._blockchain.add_transactions(vote.data)
         return self
