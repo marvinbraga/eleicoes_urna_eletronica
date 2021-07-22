@@ -30,10 +30,16 @@ _Por Marcus Vinicius Braga_
 
 ## Envio do Registro de Urna
 - O sistema envia o registro de urna.
+- Uma cópia assinada do registro de urna deve ser escaneada, criptografada e enviada para que possa haver conferência.   
 
 ## Processamento do Registro de Urna
-- O processamento da urna irá capturar o registro de urna e verificar se o hash gerado por estes dodos são identicos ao 
-  hash do registro e, somente assim, poderá processá-lo.
-- Finalizado o processamento do registro de urna então o sistema salvará o registro o registro de urna juntamente com 
+- O processamento da urna irá capturar o registro de urna e verificar se o hash deste registro é identico ao hash do 
+  documento escaneado. 
+- O processamento irá gerar uma hash com as informações capturadas do registro de urna atual e compará-lo com o 
+  hash do registro salvo e, somente assim, poderá processá-lo.
+- Finalizado o processamento do registro de urna então o sistema salvará o registro de urna juntamente com 
   o hash gerado para sua contabilização juntamente com data e hora automática do servidor.
+  
+## Totalização
+- A totalização deve ser feita utilizando a tecnologia Block Chain.
   
