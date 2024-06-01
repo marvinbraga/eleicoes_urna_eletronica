@@ -20,11 +20,8 @@ class TextFileModel(AbstractModel):
         result = None
         if os.path.isfile(self._filename):
             with open(self._filename, 'r', encoding='utf-8') as f:
-                try:
-                    data = f.readlines()
-                    print(type(data), data)
-                finally:
-                    f.close()
+                data = f.readlines()
+                print(type(data), data)
                 result = json.loads(''.join(data))
         return result
 
@@ -36,9 +33,6 @@ class TextFileModel(AbstractModel):
         else:
             data = [self.as_dict()]
         with open(self._filename, 'w', encoding='utf-8') as f:
-            try:
-                if commit:
-                    json.dump(data, f, ensure_ascii=False)
-            finally:
-                f.close()
+            if commit:
+                json.dump(data, f, ensure_ascii=False)
         return self
