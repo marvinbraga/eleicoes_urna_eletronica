@@ -1,9 +1,7 @@
 # processors/classes.py
 import base64
 import json
-import os
 from datetime import datetime
-from pathlib import Path
 from typing import List
 
 from cryptography.exceptions import InvalidSignature
@@ -18,27 +16,20 @@ from models.classes import Voto, BoletimUrna, Candidato, RegistroImpresso, Regis
 from utils.datetime import datetime_to_string
 
 
-class SistemaVotacao:
+class CriptografiaService:
     def __init__(self, chave_privada_path: str, chave_criptografia_path: str):
-        self.blockchain = Blockchain()
-        self.votos: List[Voto] = []
-        self.boletins_urna: List[BoletimUrna] = []
-
-        # Carrega a chave de criptografia a partir do arquivo, se existir
-        if os.path.exists(chave_criptografia_path):
-            with open(chave_criptografia_path, 'rb') as file:
-                self.chave_criptografia = file.read()
-
-        self.cifra = Fernet(self.chave_criptografia)
-
-        # Carrega a chave privada a partir do arquivo
-        with open(chave_privada_path, 'rb') as file:
-            self.chave_privada = serialization.load_pem_private_key(
-                file.read(),
-                password=None
-            )
-
+        self.chave_privada = self._carregar_chave_privada(chave_privada_path)
         self.chave_publica = self.chave_privada.public_key()
+        self.cifra = self._carregar_cifra(chave_criptografia_path)
+
+    def _carregar_chave_privada(self, chave_privada_path: str):
+        with open(chave_privada_path, 'rb') as file:
+            return serialization.load_pem_private_key(file.read(), password=None)
+
+    def _carregar_cifra(self, chave_criptografia_path: str):
+        with open(chave_criptografia_path, 'rb') as file:
+            chave_criptografia = file.read()
+        return Fernet(chave_criptografia)
 
     def criptografar_dados(self, dados: str) -> str:
         dados_criptografados = self.cifra.encrypt(dados.encode())
@@ -49,30 +40,30 @@ class SistemaVotacao:
         return self.cifra.decrypt(dados_criptografados_bytes).decode()
 
     def assinar_dados(self, dados: str) -> bytes:
-        assinatura = self.chave_privada.sign(
+        return self.chave_privada.sign(
             dados.encode(),
-            padding.PSS(
-                mgf=padding.MGF1(hashes.SHA256()),
-                salt_length=padding.PSS.MAX_LENGTH
-            ),
+            padding.PSS(mgf=padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.MAX_LENGTH),
             hashes.SHA256()
         )
-        return assinatura
 
     def verificar_assinatura(self, dados: str, assinatura: bytes) -> bool:
         try:
             self.chave_publica.verify(
                 assinatura,
                 dados.encode(),
-                padding.PSS(
-                    mgf=padding.MGF1(hashes.SHA256()),
-                    salt_length=padding.PSS.MAX_LENGTH
-                ),
+                padding.PSS(mgf=padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.MAX_LENGTH),
                 hashes.SHA256()
             )
             return True
         except InvalidSignature:
             return False
+
+
+class VotoService:
+    def __init__(self, criptografia_service: CriptografiaService, blockchain: Blockchain):
+        self.criptografia_service = criptografia_service
+        self.blockchain = blockchain
+        self.votos: List[Voto] = []
 
     def votar(self, candidato: Candidato) -> Voto:
         voto = Voto(
@@ -83,22 +74,16 @@ class SistemaVotacao:
             qr_code=f"qrcode_{len(self.votos) + 1}"
         )
         voto_json = voto.json()
-        assinatura = self.assinar_dados(voto_json)
+        assinatura = self.criptografia_service.assinar_dados(voto_json)
         voto_assinado = {
             "voto": voto_json,
             "assinatura": base64.b64encode(assinatura).decode()
         }
-        voto_criptografado = self.criptografar_dados(json.dumps(voto_assinado))
+        voto_criptografado = self.criptografia_service.criptografar_dados(json.dumps(voto_assinado))
         self.votos.append(voto)
         self.blockchain.add_transaction(voto_criptografado)
         self.blockchain.mine_pending_transactions()
         return voto
-
-    def gerar_registro_impresso(self, voto: Voto) -> RegistroImpresso:
-        return RegistroImpresso(
-            voto=voto,
-            data_hora=datetime.now()
-        )
 
     def validar_votos(self, registros_impressos: List[RegistroImpresso]) -> bool:
         for registro in registros_impressos:
@@ -106,6 +91,29 @@ class SistemaVotacao:
             if voto is None or voto.dict() != registro.voto.dict():
                 return False
         return True
+
+    def processar_votos(self, votos: List[Voto]):
+        for voto_criptografado in votos:
+            voto_descriptografado = self.criptografia_service.descriptografar_dados(voto_criptografado)
+            voto_assinado = json.loads(voto_descriptografado)
+            voto_json = voto_assinado["voto"]
+            assinatura = base64.b64decode(voto_assinado["assinatura"])
+
+            if self.criptografia_service.verificar_assinatura(voto_json, assinatura):
+                voto = Voto.parse_raw(voto_json)
+                self.votos.append(voto)
+                self.blockchain.add_transaction(voto_criptografado)
+            else:
+                print("Voto inválido: assinatura não confere")
+
+        self.blockchain.mine_pending_transactions()
+
+
+class BoletimUrnaService:
+    def __init__(self, criptografia_service: CriptografiaService, voto_service: VotoService):
+        self.criptografia_service = criptografia_service
+        self.voto_service = voto_service
+        self.boletins_urna: List[BoletimUrna] = []
 
     def gerar_boletim_urna(self) -> BoletimUrna:
         boletim = BoletimUrna(
@@ -115,20 +123,18 @@ class SistemaVotacao:
             municipio="Município ABC",
             estado="Estado MN",
             data_hora=datetime.now(),
-            hash_final_blockchain=self.blockchain.chain[-1].hash,
-            hash_bu=self.blockchain.chain[-1].hash,
+            hash_final_blockchain=self.voto_service.blockchain.chain[-1].hash,
+            hash_bu=self.voto_service.blockchain.chain[-1].hash,
             qr_code=f"qrcode_bu_{len(self.boletins_urna) + 1}",
-            votos=self.votos
+            votos=self.voto_service.votos
         )
 
-        # Gera a assinatura digital do boletim de urna
         boletim_dict = boletim.dict(exclude_none=True)
-        assinatura_boletim = self.assinar_dados(json.dumps(boletim_dict, default=datetime_to_string, sort_keys=True))
-
-        # Adiciona a assinatura ao boletim de urna
+        assinatura_boletim = self.criptografia_service.assinar_dados(
+            json.dumps(boletim_dict, default=datetime_to_string, sort_keys=True))
         boletim.assinatura = base64.b64encode(assinatura_boletim).decode()
 
-        boletim_criptografado = self.criptografar_dados(boletim.json())
+        boletim_criptografado = self.criptografia_service.criptografar_dados(boletim.json())
         self.boletins_urna.append(boletim)
         return boletim
 
@@ -138,47 +144,61 @@ class SistemaVotacao:
         if boletim_eletronico is None:
             return False
 
-        # Verifica a assinatura do boletim de urna
         boletim_dict = boletim_eletronico.dict(exclude_none=True, exclude={'assinatura'})
         assinatura_boletim = base64.b64decode(boletim_eletronico.assinatura)
-        return self.verificar_assinatura(
+        return self.criptografia_service.verificar_assinatura(
             json.dumps(boletim_dict, default=datetime_to_string, sort_keys=True),
             assinatura_boletim
         )
 
-    def gerar_registro_urna(self, boletim_urna: BoletimUrna) -> RegistroUrna:
-        return RegistroUrna(
-            id=len(self.boletins_urna),
-            data_hora=datetime.now(),
-            boletim_urna_escaneado=b"dados_escaneados",
-            boletim_urna_eletronico=boletim_urna
-        )
+
+class TotalizacaoVotosService:
+    def __init__(self, criptografia_service: CriptografiaService, voto_service: VotoService):
+        self.criptografia_service = criptografia_service
+        self.voto_service = voto_service
 
     def totalizar_votos(self) -> TotalizacaoVotos:
+        tally = self._contabilizar_votos()
+        votos_totalizados = self._gerar_votos_totalizados(tally)
+        totalizacao = self._criar_totalizacao_votos(votos_totalizados)
+        self._assinar_totalizacao(totalizacao)
+        return totalizacao
+
+    def _contabilizar_votos(self) -> dict:
         tally = {}
-        for block in self.blockchain.chain:
+        for block in self.voto_service.blockchain.chain:
             for transaction in block.transactions:
-                voto_descriptografado = self.descriptografar_dados(transaction)
-                voto_assinado = json.loads(voto_descriptografado)
-                voto_json = voto_assinado["voto"]
-                assinatura = base64.b64decode(voto_assinado["assinatura"])
+                voto = self._obter_voto_valido(transaction)
+                if voto:
+                    self._atualizar_contagem_votos(tally, voto)
+        return tally
 
-                if self.verificar_assinatura(voto_json, assinatura):
-                    voto = Voto.parse_raw(voto_json)
-                    candidato_id = voto.candidato.id
-                    if candidato_id in tally:
-                        tally[candidato_id]["votos"] += 1
-                    else:
-                        tally[candidato_id] = {
-                            "candidato": voto.candidato,
-                            "votos": 1,
-                            "hash_localizacao": voto.hash_localizacao,
-                            "hash_blockchain": voto.hash_blockchain,
-                            "qr_code": voto.qr_code
-                        }
-                else:
-                    print("Voto inválido: assinatura não confere")
+    def _obter_voto_valido(self, transaction: str) -> Voto:
+        voto_descriptografado = self.criptografia_service.descriptografar_dados(transaction)
+        voto_assinado = json.loads(voto_descriptografado)
+        voto_json = voto_assinado["voto"]
+        assinatura = base64.b64decode(voto_assinado["assinatura"])
 
+        if self.criptografia_service.verificar_assinatura(voto_json, assinatura):
+            return Voto.parse_raw(voto_json)
+        else:
+            print("Voto inválido: assinatura não confere")
+            return None
+
+    def _atualizar_contagem_votos(self, tally: dict, voto: Voto):
+        candidato_id = voto.candidato.id
+        if candidato_id in tally:
+            tally[candidato_id]["votos"] += 1
+        else:
+            tally[candidato_id] = {
+                "candidato": voto.candidato,
+                "votos": 1,
+                "hash_localizacao": voto.hash_localizacao,
+                "hash_blockchain": voto.hash_blockchain,
+                "qr_code": voto.qr_code
+            }
+
+    def _gerar_votos_totalizados(self, tally: dict) -> List[Voto]:
         votos_totalizados = []
         for candidato_id, dados_voto in tally.items():
             voto_totalizado = Voto(
@@ -189,146 +209,96 @@ class SistemaVotacao:
                 qr_code=dados_voto["qr_code"]
             )
             votos_totalizados.append(voto_totalizado)
+        return votos_totalizados
 
-        totalizacao = TotalizacaoVotos(
+    def _criar_totalizacao_votos(self, votos_totalizados: List[Voto]) -> TotalizacaoVotos:
+        return TotalizacaoVotos(
             id=1,
             data_hora=datetime.now(),
             votos_totalizados=votos_totalizados,
-            hash_blockchain=self.blockchain.chain[-1].hash
+            hash_blockchain=self.voto_service.blockchain.chain[-1].hash
         )
 
-        # Gera a assinatura digital do resultado da totalização
+    def _assinar_totalizacao(self, totalizacao: TotalizacaoVotos):
         totalizacao_dict = totalizacao.dict(exclude_none=True)
-        assinatura_totalizacao = self.assinar_dados(
+        assinatura_totalizacao = self.criptografia_service.assinar_dados(
             json.dumps(totalizacao_dict, default=datetime_to_string, sort_keys=True))
-        # Adiciona a assinatura à totalização
         totalizacao.assinatura = base64.b64encode(assinatura_totalizacao).decode()
 
-        return totalizacao
-
     def verificar_integridade_totalizacao(self, totalizacao: TotalizacaoVotos) -> bool:
-        # Verifica a assinatura da totalização
         totalizacao_dict = totalizacao.dict(exclude_none=True, exclude={'assinatura'})
         assinatura_totalizacao = base64.b64decode(totalizacao.assinatura)
-        return self.verificar_assinatura(
+        return self.criptografia_service.verificar_assinatura(
             json.dumps(totalizacao_dict, default=datetime_to_string, sort_keys=True),
             assinatura_totalizacao,
         )
 
+
+class AnomaliaService:
+    def __init__(self):
+        self.isolation_forest = IsolationForest(n_estimators=100, contamination=0.1)
+
     def _extrair_caracteristicas(self, voto):
-        # Extrai características numéricas do voto
         candidato_id = voto.candidato.id
         hash_localizacao = hash(voto.hash_localizacao) % 1000000
         hash_blockchain = hash(voto.hash_blockchain) % 1000000
         return [candidato_id, hash_localizacao, hash_blockchain]
 
     def detectar_anomalias(self, votos):
-        # Extrai as características numéricas dos votos
         caracteristicas = [self._extrair_caracteristicas(voto) for voto in votos]
-
-        # Cria uma instância do IsolationForest
-        isolation_forest = IsolationForest(n_estimators=100, contamination=0.1)
-
-        # Treina o modelo com as características dos votos
-        isolation_forest.fit(caracteristicas)
-
-        # Obtém as pontuações de anomalia para cada voto
-        anomaly_scores = isolation_forest.decision_function(caracteristicas)
-
-        # Identifica os votos anômalos com base nas pontuações
+        self.isolation_forest.fit(caracteristicas)
+        anomaly_scores = self.isolation_forest.decision_function(caracteristicas)
         anomalias = [voto for voto, score in zip(votos, anomaly_scores) if score < 0]
-
         return anomalias
 
     def detectar_conluio(self, votos):
-        # Extrai as características numéricas dos votos
         caracteristicas = [self._extrair_caracteristicas(voto) for voto in votos]
-
-        # Cria uma instância do IsolationForest
-        isolation_forest = IsolationForest(n_estimators=100, contamination=0.1)
-
-        # Treina o modelo com as características dos votos
-        isolation_forest.fit(caracteristicas)
-
-        # Obtém as pontuações de anomalia para cada voto
-        anomaly_scores = isolation_forest.decision_function(caracteristicas)
-
-        # Identifica os votos suspeitos de conluio com base nas pontuações
+        self.isolation_forest.fit(caracteristicas)
+        anomaly_scores = self.isolation_forest.decision_function(caracteristicas)
         conluio_suspeito = [voto for voto, score in zip(votos, anomaly_scores) if score < -0.5]
-
         return conluio_suspeito
 
 
-def processar_votos(self, votos: List[Voto]):
-    for voto_criptografado in votos:
-        voto_descriptografado = self.descriptografar_dados(voto_criptografado)
-        voto_assinado = json.loads(voto_descriptografado)
-        voto_json = voto_assinado["voto"]
-        assinatura = base64.b64decode(voto_assinado["assinatura"])
+class SistemaVotacao:
+    def __init__(self, chave_privada_path: str, chave_criptografia_path: str):
+        self.criptografia_service = CriptografiaService(chave_privada_path, chave_criptografia_path)
+        self.blockchain = Blockchain()
+        self.voto_service = VotoService(self.criptografia_service, self.blockchain)
+        self.boletim_urna_service = BoletimUrnaService(self.criptografia_service, self.voto_service)
+        self.totalizacao_votos_service = TotalizacaoVotosService(self.criptografia_service, self.voto_service)
+        self.anomalia_service = AnomaliaService()
 
-        if self.verificar_assinatura(voto_json, assinatura):
-            voto = Voto.parse_raw(voto_json)
-            self.votos.append(voto)
-            self.blockchain.add_transaction(voto_criptografado)
-        else:
-            print("Voto inválido: assinatura não confere")
+    def votar(self, candidato: Candidato) -> Voto:
+        return self.voto_service.votar(candidato)
 
-    self.blockchain.mine_pending_transactions()
+    def gerar_registro_impresso(self, voto: Voto) -> RegistroImpresso:
+        return RegistroImpresso(voto=voto, data_hora=datetime.now())
 
+    def validar_votos(self, registros_impressos: List[RegistroImpresso]) -> bool:
+        return self.voto_service.validar_votos(registros_impressos)
 
-if __name__ == '__main__':
-    # Exemplo de uso
+    def gerar_boletim_urna(self) -> BoletimUrna:
+        return self.boletim_urna_service.gerar_boletim_urna()
 
-    path = Path(__file__).parent.parent
-    private_key_filename = path / 'resources/private_key.pem'
-    # Exemplo de uso
-    cryptography_key_filename = path / 'resources/cryptography_key.pem'
+    def validar_boletim_urna(self, boletim_impresso: BoletimUrna) -> bool:
+        return self.boletim_urna_service.validar_boletim_urna(boletim_impresso)
 
-    sistema_votacao = SistemaVotacao(
-        chave_privada_path=private_key_filename.as_posix(),
-        chave_criptografia_path=cryptography_key_filename.as_posix()
-    )
+    def gerar_registro_urna(self, boletim_urna: BoletimUrna) -> RegistroUrna:
+        return RegistroUrna(
+            id=len(self.boletim_urna_service.boletins_urna),
+            data_hora=datetime.now(),
+            boletim_urna_escaneado=b"dados_escaneados",
+            boletim_urna_eletronico=boletim_urna
+        )
 
-    # Votação
-    candidato1 = Candidato(id=1, nome="Candidato 1", partido="Partido A", foto="foto1.jpg")
-    candidato2 = Candidato(id=2, nome="Candidato 2", partido="Partido B", foto="foto2.jpg")
+    def totalizar_votos(self) -> TotalizacaoVotos:
+        return self.totalizacao_votos_service.totalizar_votos()
 
-    voto1 = sistema_votacao.votar(candidato1)
-    voto2 = sistema_votacao.votar(candidato2)
+    def verificar_integridade_totalizacao(self, totalizacao: TotalizacaoVotos) -> bool:
+        return self.totalizacao_votos_service.verificar_integridade_totalizacao(totalizacao)
 
-    registro_impresso1 = sistema_votacao.gerar_registro_impresso(voto1)
-    registro_impresso2 = sistema_votacao.gerar_registro_impresso(voto2)
+    def detectar_anomalias(self, votos):
+        return self.anomalia_service.detectar_anomalias(votos)
 
-    # Validação dos votos
-    registros_impressos = [registro_impresso1, registro_impresso2]
-    votos_validos = sistema_votacao.validar_votos(registros_impressos)
-    print(f"Votos válidos: {votos_validos}")
-
-    # Criação do Boletim de Urna
-    boletim_urna = sistema_votacao.gerar_boletim_urna()
-
-    # Validação do Boletim de Urna
-    boletim_valido = sistema_votacao.validar_boletim_urna(boletim_urna)
-    print(f"Boletim de Urna válido: {boletim_valido}")
-
-    # Criação do Registro de Urna
-    registro_urna = sistema_votacao.gerar_registro_urna(boletim_urna)
-
-    # Totalização dos votos
-    totalizacao = sistema_votacao.totalizar_votos()
-    print(f"Totalização dos votos: {totalizacao}")
-    for voto in totalizacao.votos_totalizados:
-        print(voto)
-
-    # Verifica integridade da totalização
-    eh_integra_totalizacao = sistema_votacao.verificar_integridade_totalizacao(totalizacao)
-    print(f"Integridade da totalização de votos: {eh_integra_totalizacao}")
-
-    # Detecção de anomalias após a totalização
-    votos_totalizados = totalizacao.votos_totalizados
-    anomalias = sistema_votacao.detectar_anomalias(votos_totalizados)
-    print(f"Anomalias detectadas após a totalização: {anomalias}")
-
-    # Detecção de conluio após a totalização
-    conluio_suspeito = sistema_votacao.detectar_conluio(votos_totalizados)
-    print(f"Votos suspeitos de conluio após a totalização: {conluio_suspeito}")
+    def detectar_conluio(self, votos):
+        return self.anomalia_service.detectar_conluio(votos)
