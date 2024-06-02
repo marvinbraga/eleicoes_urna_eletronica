@@ -51,9 +51,9 @@ class QrCode(object):
     @staticmethod
     def decode_from_file(file_name):
         """
-            Decodes QRCode image data.
-            :param file_name: Physical path of the image.
-            :return: Dictionary with information collected from QRCode.
+        Decodes QRCode image data.
+        :param file_name: Physical path of the image.
+        :return: Dictionary with information collected from QRCode.
         """
         return dict(decode(Image.open(file_name))[0]._asdict())
 
@@ -61,8 +61,8 @@ class QrCode(object):
     @staticmethod
     def decode_from_image(blob_image):
         """
-            Decodes QRCode image data.
-            :param blob_image: Image blob.
-            :return: Dictionary with information collected from QRCode.
+        Decodes QRCode image data.
+        :param blob_image: Image blob.
+        :return: Dictionary with information collected from QRCode.
         """
         return dict(decode(blob_image)[0]._asdict())
