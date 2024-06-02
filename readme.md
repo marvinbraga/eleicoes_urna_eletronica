@@ -29,33 +29,51 @@ confiável para o processo de votação, garantindo a integridade dos votos e a 
 ## Estrutura do projeto
 
 ```
-├── main.py
+.
+├── blockchain/
+│   └── classes.py
 ├── models/
+│   ├── __init__.py
 │   └── classes.py
 ├── processors/
+│   ├── __init__.py
 │   └── classes.py
 ├── resources/
 │   ├── private_key.pem
 │   └── cryptography_key.pem
+├── security/
+│   ├── arquivos de logs...
 ├── utils/
+│   ├── __init__.py
 │   └── security.py
+│   └── ...
+├── main.py
 ├── pyproject.toml
-└── poetry.lock
+└── readme.md
 ```
 
+Aqui está uma explicação de cada diretório e arquivo:
+
+- `blockchain/`: Diretório para implementação relacionada à tecnologia blockchain.
+- `models/`: Diretório para classes de modelo, como Candidato, Partido, Cargo e Eleicao.
+  - `classes.py`: Definição das classes de modelo, como Candidato, Partido, Cargo e Eleicao.
+- `processors/`: Diretório para classes de processamento, como SistemaVotacao.
+  - `classes.py`: Implementação da classe SistemaVotacao, responsável pelo processamento da 
+    votação e operações relacionadas.
+- `resources/`: Diretório para armazenar recursos, como chaves de criptografia.
+  - `private_key.pem`: Arquivo contendo a chave privada.
+  - `cryptography_key.pem`: Arquivo contendo a chave de criptografia.
+- `security/`: Diretório para classes relacionadas à segurança.
+- `utils/`: Diretório para utilitários e funções auxiliares.
+  - `security.py`: Implementação das classes KeyManager e CryptographyKeyManager para gerenciamento das 
+    chaves de criptografia. 
 - `main.py`: Arquivo principal que contém o exemplo de uso do sistema de votação.
-- `models/classes.py`: Definição das classes de modelo, como Candidato, Partido, Cargo e Eleicao.
-- `processors/classes.py`: Implementação da classe SistemaVotacao, responsável pelo processamento da votação e operações
-  relacionadas.
-- `resources/`: Diretório que armazena as chaves de criptografia utilizadas pelo sistema.
-- `utils/security.py`: Implementação das classes KeyManager e CryptographyKeyManager para gerenciamento das chaves de
-  criptografia.
-- `pyproject.toml`: Arquivo de configuração do Poetry, contendo as dependências do projeto.
-- `poetry.lock`: Arquivo de bloqueio gerado pelo Poetry, garantindo a reprodutibilidade do ambiente.
+- `pyproject.toml`: Arquivo de configuração do Poetry para gerenciar as dependências do projeto.
+- `readme.md`: Arquivo de documentação do projeto.
 
 ## Configuração e execução
 
-1. Certifique-se de ter o Python 3.x e o Poetry instalados em seu sistema.
+1. Certifique-se de ter o Python ^3.10 e o Poetry instalados em seu sistema.
 2. Clone este repositório em sua máquina local.
 3. Navegue até o diretório raiz do projeto.
 4. Execute o seguinte comando para instalar as dependências do projeto:
