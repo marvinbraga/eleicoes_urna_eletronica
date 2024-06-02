@@ -3,13 +3,13 @@
 # Exemplo de uso
 from pathlib import Path
 
-from models.classes import Candidato
+from models.classes import Candidato, Partido, Cargo, Eleicao
 from processors.classes import SistemaVotacao
 from utils.security import KeyManager, CryptographyKeyManager
 
 
 def run():
-    path = Path(__file__).parent
+    path = Path().parent
     private_key_filename = path / 'resources/private_key.pem'
     cryptography_key_filename = path / 'resources/cryptography_key.pem'
     # Gerando as chaves de criptografia para a demonstração
@@ -22,9 +22,34 @@ def run():
         chave_criptografia_path=cryptography_key_filename.as_posix()
     )
 
+    # Criação dos objetos relacionados aos candidatos
+    partido1 = Partido(numero=45, sigla="PA", nome="Partido A")
+    partido2 = Partido(numero=65, sigla="PB", nome="Partido B")
+
+    cargo1 = Cargo(id=1, nome="Prefeito", eleicao="Eleição Municipal")
+    cargo2 = Cargo(id=2, nome="Vereador", eleicao="Eleição Municipal")
+
+    eleicao = Eleicao(id=1, nome="Eleição Municipal 2024", data="2024-10-06", turnos=1)
+
     # Votação
-    candidato1 = Candidato(id=1, nome="Candidato 1", partido="Partido A", foto="foto1.jpg")
-    candidato2 = Candidato(id=2, nome="Candidato 2", partido="Partido B", foto="foto2.jpg")
+    candidato1 = Candidato(
+        id=1,
+        nome="Candidato 1",
+        partido=partido1,
+        codigo="45123",
+        foto="foto1.jpg",
+        cargo=cargo1,
+        eleicao=eleicao
+    )
+    candidato2 = Candidato(
+        id=2,
+        nome="Candidato 2",
+        partido=partido2,
+        codigo="65456",
+        foto="foto2.jpg",
+        cargo=cargo2,
+        eleicao=eleicao
+    )
 
     voto1 = sistema_votacao.votar(candidato1)
     voto2 = sistema_votacao.votar(candidato2)
