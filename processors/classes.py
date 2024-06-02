@@ -1,8 +1,12 @@
 # processors/classes.py
 import base64
+import hashlib
 import json
+import logging
+import uuid
 from datetime import datetime
-from typing import List
+from pathlib import Path
+from typing import List, Optional
 
 from cryptography.exceptions import InvalidSignature
 from cryptography.fernet import Fernet
@@ -14,6 +18,39 @@ from sklearn.ensemble import IsolationForest
 from blockchain.classes import Blockchain
 from models.classes import Voto, BoletimUrna, Candidato, RegistroImpresso, RegistroUrna, TotalizacaoVotos
 from utils.datetime import datetime_to_string
+
+
+class IntegrityVerifier:
+    def calculate_hash(self, data: str) -> str:
+        return hashlib.sha256(data.encode()).hexdigest()
+
+    def verify_integrity(self, data: str, expected_hash: str) -> bool:
+        actual_hash = self.calculate_hash(data)
+        return actual_hash == expected_hash
+
+
+class NonceGenerator:
+    def generate_nonce(self) -> str:
+        return str(uuid.uuid4())
+
+
+class AuditLogger:
+    _instance: Optional['AuditLogger'] = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            cls._instance.logger = logging.getLogger('audit_logger')
+            cls._instance.logger.setLevel(logging.INFO)
+            filename = Path(__file__).parent.parent.joinpath('/security/audit.log')
+            handler = logging.FileHandler('audit.log')
+            formatter = logging.Formatter('%(asctime)s - %(message)s')
+            handler.setFormatter(formatter)
+            cls._instance.logger.addHandler(handler)
+        return cls._instance
+
+    def log(self, message: str):
+        self.logger.info(message)
 
 
 class CriptografiaService:
@@ -60,9 +97,14 @@ class CriptografiaService:
 
 
 class VotoService:
-    def __init__(self, criptografia_service: CriptografiaService, blockchain: Blockchain):
+    def __init__(self, criptografia_service: CriptografiaService, blockchain: Blockchain,
+                 integrity_verifier: IntegrityVerifier, nonce_generator: NonceGenerator,
+                 audit_logger: AuditLogger):
         self.criptografia_service = criptografia_service
         self.blockchain = blockchain
+        self.integrity_verifier = integrity_verifier
+        self.nonce_generator = nonce_generator
+        self.audit_logger = audit_logger
         self.votos: List[Voto] = []
 
     def votar(self, candidato: Candidato) -> Voto:
@@ -71,7 +113,8 @@ class VotoService:
             candidato=candidato,
             hash_localizacao=self.blockchain.chain[-1].hash,
             hash_blockchain=self.blockchain.chain[-1].hash,
-            qr_code=f"qrcode_{len(self.votos) + 1}"
+            qr_code=f"qrcode_{len(self.votos) + 1}",
+            nonce=self.nonce_generator.generate_nonce()
         )
         voto_json = voto.json()
         assinatura = self.criptografia_service.assinar_dados(voto_json)
@@ -83,12 +126,15 @@ class VotoService:
         self.votos.append(voto)
         self.blockchain.add_transaction(voto_criptografado)
         self.blockchain.mine_pending_transactions()
+        self.audit_logger.log(f"Voto registrado: {voto}")
         return voto
 
     def validar_votos(self, registros_impressos: List[RegistroImpresso]) -> bool:
         for registro in registros_impressos:
             voto = next((v for v in self.votos if v.id == registro.voto.id), None)
             if voto is None or voto.dict() != registro.voto.dict():
+                return False
+            if not self.integrity_verifier.verify_integrity(registro.voto.json(), voto.hash_blockchain):
                 return False
         return True
 
@@ -101,10 +147,13 @@ class VotoService:
 
             if self.criptografia_service.verificar_assinatura(voto_json, assinatura):
                 voto = Voto.parse_raw(voto_json)
-                self.votos.append(voto)
-                self.blockchain.add_transaction(voto_criptografado)
+                if voto.nonce not in [v.nonce for v in self.votos]:
+                    self.votos.append(voto)
+                    self.blockchain.add_transaction(voto_criptografado)
+                else:
+                    self.audit_logger.log(f"Tentativa de voto duplicado: {voto}")
             else:
-                print("Voto inválido: assinatura não confere")
+                self.audit_logger.log(f"Voto inválido: assinatura não confere - {voto_json}")
 
         self.blockchain.mine_pending_transactions()
 
@@ -153,9 +202,11 @@ class BoletimUrnaService:
 
 
 class TotalizacaoVotosService:
-    def __init__(self, criptografia_service: CriptografiaService, voto_service: VotoService):
+    def __init__(self, criptografia_service: CriptografiaService, voto_service: VotoService,
+                 audit_logger: AuditLogger):
         self.criptografia_service = criptografia_service
         self.voto_service = voto_service
+        self.audit_logger = audit_logger
 
     def totalizar_votos(self) -> TotalizacaoVotos:
         tally = self._contabilizar_votos()
@@ -224,6 +275,7 @@ class TotalizacaoVotosService:
         assinatura_totalizacao = self.criptografia_service.assinar_dados(
             json.dumps(totalizacao_dict, default=datetime_to_string, sort_keys=True))
         totalizacao.assinatura = base64.b64encode(assinatura_totalizacao).decode()
+        self.audit_logger.log(f"Totalização de votos assinada: {totalizacao}")
 
     def verificar_integridade_totalizacao(self, totalizacao: TotalizacaoVotos) -> bool:
         totalizacao_dict = totalizacao.dict(exclude_none=True, exclude={'assinatura'})
@@ -263,9 +315,17 @@ class SistemaVotacao:
     def __init__(self, chave_privada_path: str, chave_criptografia_path: str):
         self.criptografia_service = CriptografiaService(chave_privada_path, chave_criptografia_path)
         self.blockchain = Blockchain()
-        self.voto_service = VotoService(self.criptografia_service, self.blockchain)
+        self.integrity_verifier = IntegrityVerifier()
+        self.nonce_generator = NonceGenerator()
+        self.audit_logger = AuditLogger()
+        self.voto_service = VotoService(self.criptografia_service, self.blockchain,
+                                        self.integrity_verifier, self.nonce_generator,
+                                        self.audit_logger)
         self.boletim_urna_service = BoletimUrnaService(self.criptografia_service, self.voto_service)
-        self.totalizacao_votos_service = TotalizacaoVotosService(self.criptografia_service, self.voto_service)
+        self.totalizacao_votos_service = TotalizacaoVotosService(
+            self.criptografia_service, self.voto_service,
+            self.audit_logger
+        )
         self.anomalia_service = AnomaliaService()
 
     def votar(self, candidato: Candidato) -> Voto:
