@@ -2,10 +2,10 @@
 """
 Abstracts Models
 """
-from abc import ABCMeta, abstractmethod
+from abc import ABC, abstractmethod
 
 
-class AbstractDictSerializer(metaclass=ABCMeta):
+class AbstractDictSerializer(ABC):
     """ Classe abstrata de serialização de Model para Dict. """
 
     @abstractmethod
@@ -14,7 +14,7 @@ class AbstractDictSerializer(metaclass=ABCMeta):
         pass
 
 
-class AbstractModel(metaclass=ABCMeta):
+class AbstractModel(ABC):
     """ Class to abstract model. """
 
     @abstractmethod

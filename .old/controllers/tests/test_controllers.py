@@ -4,7 +4,7 @@ Test Controllers
 """
 import random
 
-from controllers.ballot_boxes import BallotBoxesController
+from old.controllers.ballot_boxes import BallotBoxesController
 from models.ballot_boxes import BallotBoxModel
 from models.tests.test_models import get_election, save_model
 from models.votes import Vote
