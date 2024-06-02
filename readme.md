@@ -91,7 +91,7 @@ Aqui está uma explicação de cada diretório e arquivo:
 
 ## Licença
 
-Este projeto está licenciado sob a GNU General Public License v2.0. Consulte o arquivo [LICENSE](LICENSE) para obter
+Este projeto está licenciado sob a GNU General Public License v3.0. Consulte o arquivo [LICENSE](LICENSE) para obter
 mais informações.
 
 ## Contribuição
