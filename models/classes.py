@@ -4,11 +4,33 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 
+class Partido(BaseModel):
+    numero: int = Field(..., description="Número do partido")
+    sigla: str = Field(..., description="Sigla do partido")
+    nome: str = Field(..., description="Nome completo do partido")
+
+
+class Cargo(BaseModel):
+    id: int = Field(..., description="ID único do cargo")
+    nome: str = Field(..., description="Nome do cargo")
+    eleicao: str = Field(..., description="Eleição a qual o cargo pertence")
+
+
+class Eleicao(BaseModel):
+    id: int = Field(..., description="ID único da eleição")
+    nome: str = Field(..., description="Nome da eleição")
+    data: datetime = Field(..., description="Data da eleição")
+    turnos: int = Field(..., description="Número de turnos da eleição (1 ou 2)")
+
+
 class Candidato(BaseModel):
     id: int = Field(..., description="ID único do candidato")
     nome: str = Field(..., description="Nome completo do candidato")
-    partido: str = Field(..., description="Partido político do candidato")
+    partido: Partido = Field(..., description="Partido político do candidato")
+    codigo: str = Field(..., description="Código do candidato (prefixo do partido + código específico)")
     foto: str = Field(..., description="URL da foto do candidato")
+    cargo: Cargo = Field(..., description="Cargo ao qual o candidato está concorrendo")
+    eleicao: Eleicao = Field(..., description="Eleição da qual o candidato está participando")
 
 
 class Voto(BaseModel):
