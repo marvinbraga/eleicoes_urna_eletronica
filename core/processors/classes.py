@@ -15,9 +15,10 @@ from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 from sklearn.ensemble import IsolationForest
 
-from blockchain.classes import Blockchain
-from models.classes import Voto, BoletimUrna, Candidato, RegistroImpresso, RegistroUrna, TotalizacaoVotos
-from utils.datetime import datetime_to_string
+from core.blockchain.classes import Blockchain
+from core.models.classes import Voto, BoletimUrna, Candidato, RegistroImpresso, RegistroUrna, TotalizacaoVotos
+from core.settings import ROOT_DIR
+from core.utils.datetime import datetime_to_string
 
 
 class IntegrityVerifier:
@@ -76,7 +77,7 @@ class AuditLogger:
             # Obtém o timestamp atual com milissegundos
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
             # Inclui o timestamp no nome do arquivo de log
-            filename = Path(__file__).parent.parent / f'security/audit_{timestamp}.log'
+            filename = ROOT_DIR / f'security/audit_{timestamp}.log'
             handler = logging.FileHandler(filename)
             formatter = logging.Formatter('%(asctime)s - %(message)s')
             handler.setFormatter(formatter)

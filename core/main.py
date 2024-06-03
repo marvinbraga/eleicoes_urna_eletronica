@@ -1,15 +1,15 @@
 # main.py
 
 # Exemplo de uso
-from pathlib import Path
 
-from models.classes import Candidato, Partido, Cargo, Eleicao
-from processors.classes import SistemaVotacao
-from utils.security import KeyManager, CryptographyKeyManager
+from core.models.classes import Candidato, Partido, Cargo, Eleicao
+from core.processors.classes import SistemaVotacao
+from core.settings import ROOT_DIR
+from core.utils.security import KeyManager, CryptographyKeyManager
 
 
 def run():
-    path = Path().parent
+    path = ROOT_DIR
     private_key_filename = path / 'resources/private_key.pem'
     cryptography_key_filename = path / 'resources/cryptography_key.pem'
     # Gerando as chaves de criptografia para a demonstração

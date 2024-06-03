@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Urna Eletrônica</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css">
+    <script>
+      // Carregar a URL do servidor FastAPI a partir de uma variável de ambiente
+      const BACKEND_URL = "{{ BACKEND_URL }}";
+    </script>
+</head>
+<body>
+<div class="container mt-5">
+    <h1 class="text-center">Urna Eletrônica</h1>
+    <div id="upload-keys" class="mt-4">
+        <h3>Upload de Chaves de Segurança</h3>
+        <form id="key-upload-form">
+            <div class="form-group">
+                <label for="cryptography_key">Chave de Criptografia (.pem)</label>
+                <input type="file" class="form-control-file" id="cryptography_key" accept=".pem">
+            </div>
+            <div class="form-group">
+                <label for="private_key">Chave Privada (.pem)</label>
+                <input type="file" class="form-control-file" id="private_key" accept=".pem">
+            </div>
+            <button type="submit" class="btn btn-primary">Enviar Chaves</button>
+        </form>
+    </div>
+    <div id="voting-section" class="mt-5 d-none">
+        <h3>Votação</h3>
+        <!-- Conteúdo da votação será adicionado aqui -->
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="/static/scripts.js"></script>
+</body>
+</html>
