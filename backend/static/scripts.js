@@ -1,4 +1,23 @@
 $(document).ready(function () {
+  // Verificar o status das chaves ao carregar a página
+  $.ajax({
+    url: BACKEND_URL + '/keys-status',
+    type: 'GET',
+    success: function (response) {
+      if (response.keys_exist) {
+        $('#upload-keys').addClass('d-none');
+        $('#voting-section').removeClass('d-none');
+      } else {
+        $('#upload-keys').removeClass('d-none');
+        $('#voting-section').addClass('d-none');
+      }
+    },
+    error: function (error) {
+      console.error('Erro ao verificar o status das chaves:', error);
+    }
+  });
+
+  // Enviar chaves de segurança
   $('#key-upload-form').on('submit', function (event) {
     event.preventDefault();
 

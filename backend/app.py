@@ -66,6 +66,15 @@ async def upload_keys(cryptography_key: UploadFile = File(...), private_key: Upl
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/keys-status")
+async def keys_status():
+    cryptography_key_path = os.path.join(UPLOAD_DIRECTORY, "cryptography_key.pem")
+    private_key_path = os.path.join(UPLOAD_DIRECTORY, "private_key.pem")
+
+    keys_exist = os.path.exists(cryptography_key_path) and os.path.exists(private_key_path)
+    return JSONResponse(content={"keys_exist": keys_exist}, status_code=200)
+
+
 # Endpoints para cadastrar dados
 @app.post("/eleicao")
 async def create_eleicao(eleicao: Eleicao):
