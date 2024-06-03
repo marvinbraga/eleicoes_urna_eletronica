@@ -1,5 +1,7 @@
+import json
 import os
 
+import redis
 from dotenv import load_dotenv
 from fastapi import FastAPI, UploadFile, File, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,7 +16,15 @@ load_dotenv()
 
 # Verificar se a variável de ambiente está sendo carregada
 BACKEND_URL = os.getenv("BACKEND_URL")
+REDIS_HOST = os.getenv("REDIS_HOST")
+REDIS_PORT = os.getenv("REDIS_PORT")
+
 logger.info(f"BACKEND_URL: {BACKEND_URL}")
+logger.info(f"REDIS_HOST: {REDIS_HOST}")
+logger.info(f"REDIS_PORT: {REDIS_PORT}")
+
+# Configurar Redis
+redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
 
 # Configurar Jinja2 templates
 templates = Jinja2Templates(directory="backend/templates")
@@ -78,23 +88,55 @@ async def keys_status():
 # Endpoints para cadastrar dados
 @app.post("/eleicao")
 async def create_eleicao(eleicao: Eleicao):
-    # Lógica para salvar a eleição no banco de dados
+    # Salvar a eleição no Redis
+    redis_client.set(f"eleicao:{eleicao.id}", eleicao.json())
     return eleicao
 
 
 @app.post("/partido")
 async def create_partido(partido: Partido):
-    # Lógica para salvar o partido no banco de dados
+    # Salvar o partido no Redis
+    redis_client.set(f"partido:{partido.numero}", partido.json())
     return partido
 
 
 @app.post("/cargo")
 async def create_cargo(cargo: Cargo):
-    # Lógica para salvar o cargo no banco de dados
+    # Salvar o cargo no Redis
+    redis_client.set(f"cargo:{cargo.id}", cargo.json())
     return cargo
 
 
 @app.post("/candidato")
 async def create_candidato(candidato: Candidato):
-    # Lógica para salvar o candidato no banco de dados
+    # Salvar o candidato no Redis
+    redis_client.set(f"candidato:{candidato.id}", candidato.json())
     return candidato
+
+
+@app.post("/upload-eleicao")
+async def upload_eleicao(file: UploadFile = File(...)):
+    try:
+        # Ler o conteúdo do arquivo JSON
+        contents = await file.read()
+        data = json.loads(contents)
+
+        # Processar os dados do JSON e inicializar a urna
+        eleicao = Eleicao(**data['eleicao'])
+        partidos = [Partido(**partido) for partido in data['partidos']]
+        cargos = [Cargo(**cargo) for cargo in data['cargos']]
+        candidatos = [Candidato(**candidato) for candidato in data['candidatos']]
+
+        # Salvar os dados no Redis
+        redis_client.set(f"eleicao:{eleicao.id}", eleicao.json())
+        for partido in partidos:
+            redis_client.set(f"partido:{partido.numero}", partido.json())
+        for cargo in cargos:
+            redis_client.set(f"cargo:{cargo.id}", cargo.json())
+        for candidato in candidatos:
+            redis_client.set(f"candidato:{candidato.id}", candidato.json())
+
+        return JSONResponse(content={"message": "Dados da eleição enviados e processados com sucesso!"},
+                            status_code=200)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

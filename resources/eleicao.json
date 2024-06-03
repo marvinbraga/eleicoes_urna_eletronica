@@ -1,0 +1,56 @@
+{
+    "eleicao": {
+        "id": 1,
+        "nome": "Eleição 2024",
+        "data": "2024-10-01T00:00:00",
+        "turnos": 2
+    },
+    "partidos": [
+        {
+            "numero": 10,
+            "sigla": "ABC",
+            "nome": "Partido ABC"
+        },
+        {
+            "numero": 20,
+            "sigla": "DEF",
+            "nome": "Partido DEF"
+        }
+    ],
+    "cargos": [
+        {
+            "id": 1,
+            "nome": "Presidente",
+            "eleicao": "Eleição 2024"
+        },
+        {
+            "id": 2,
+            "nome": "Governador",
+            "eleicao": "Eleição 2024"
+        }
+    ],
+    "candidatos": [
+        {
+            "id": 1,
+            "nome": "Candidato 1",
+            "partido": {
+                "numero": 10,
+                "sigla": "ABC",
+                "nome": "Partido ABC"
+            },
+            "codigo": "ABC1",
+            "foto": "url_da_foto",
+            "cargo": {
+                "id": 1,
+                "nome": "Presidente",
+                "eleicao": "Eleição 2024"
+            },
+            "eleicao": {
+                "id": 1,
+                "nome": "Eleição 2024",
+                "data": "2024-10-01T00:00:00",
+                "turnos": 1
+            }
+        }
+    ]
+}
