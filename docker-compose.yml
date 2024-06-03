@@ -1,15 +1,15 @@
 services:
-  urna_backend:
-    build:
-      context: .
-      dockerfile: ./.docker/backend/Dockerfile
-    container_name: urna-backend
-    env_file:
-      - .env
-    ports:
-      - "7000:7000"
-    depends_on:
-      - redis
+#  urna_backend:
+#    build:
+#      context: .
+#      dockerfile: ./.docker/backend/Dockerfile
+#    container_name: urna-backend
+#    env_file:
+#      - .env
+#    ports:
+#      - "7000:7000"
+#    depends_on:
+#      - redis
 
   urna_redis:
     image: "redis:latest"
@@ -17,7 +17,7 @@ services:
     env_file:
       - .env
     ports:
-      - "${REDIS_PORT}:${REDIS_PORT}"
+      - "${REDIS_PORT}:6379"
     environment:
       - REDIS_HOST=${REDIS_HOST}
-      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PORT=9379

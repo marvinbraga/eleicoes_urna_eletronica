@@ -3,7 +3,7 @@ name = "eleicoes-urna-eletronica"
 version = "0.1.0"
 description = ""
 authors = ["Marcus Vinicus Braga <mvbraga@gmail.com>"]
-readme = "README.md"
+readme = "readme.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"
