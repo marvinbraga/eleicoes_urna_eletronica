@@ -30,24 +30,26 @@ confiável para o processo de votação, garantindo a integridade dos votos e a 
 
 ```
 .
-├── blockchain/
-│   └── classes.py
-├── models/
-│   ├── __init__.py
-│   └── classes.py
-├── processors/
-│   ├── __init__.py
-│   └── classes.py
+├── core/
+    ├── blockchain/
+    │   └── classes.py
+    ├── models/
+    │   ├── __init__.py
+    │   └── classes.py
+    ├── processors/
+    │   ├── __init__.py
+    │   └── classes.py
+    ├── utils/
+    │   ├── __init__.py
+    │   └── security.py
+    │   └── ...
+    ├── main.py
+    ├── settings.py
 ├── resources/
 │   ├── private_key.pem
 │   └── cryptography_key.pem
 ├── security/
 │   ├── arquivos de logs...
-├── utils/
-│   ├── __init__.py
-│   └── security.py
-│   └── ...
-├── main.py
 ├── pyproject.toml
 └── readme.md
 ```

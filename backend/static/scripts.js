@@ -50,4 +50,34 @@ $(document).ready(function () {
       }
     });
   });
+
+  // Enviar dados da eleição
+  $('#eleicao-upload-form').on('submit', function (event) {
+    event.preventDefault();
+
+    let eleicaoFile = $('#eleicao_file')[0].files[0];
+
+    if (!eleicaoFile) {
+      alert('Por favor, selecione o arquivo JSON da eleição.');
+      return;
+    }
+
+    let formData = new FormData();
+    formData.append('file', eleicaoFile);
+
+    $.ajax({
+      url: BACKEND_URL + '/upload-eleicao',
+      type: 'POST',
+      data: formData,
+      processData: false,
+      contentType: false,
+      success: function (response) {
+        alert('Dados da eleição enviados com sucesso!');
+        // Aqui você pode adicionar a lógica para inicializar a urna com os dados recebidos
+      },
+      error: function (error) {
+        alert('Erro ao enviar os dados da eleição. Tente novamente.');
+      }
+    });
+  });
 });
