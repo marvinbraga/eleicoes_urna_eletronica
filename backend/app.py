@@ -114,17 +114,6 @@ async def create_candidato(candidato: Candidato):
     return candidato
 
 
-@app.get("/test-redis")
-async def test_redis():
-    try:
-        redis_client.set("test_key", "test_value")
-        value = redis_client.get("test_key")
-        return JSONResponse(content={"test_key": value}, status_code=200)
-    except Exception as e:
-        logger.error(f"Error: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
 @app.post("/upload-eleicao")
 async def upload_eleicao(file: UploadFile = File(...)):
     try:
@@ -147,8 +136,10 @@ async def upload_eleicao(file: UploadFile = File(...)):
         for candidato in candidatos:
             redis_client.set(f"candidato:{candidato.id}", candidato.json())
 
-        return JSONResponse(content={"message": "Dados da eleição enviados e processados com sucesso!"},
-                            status_code=200)
+        return JSONResponse(
+            content={"message": "Dados da eleição enviados e processados com sucesso!"},
+            status_code=200
+        )
     except Exception as e:
         logger.error(f"Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
