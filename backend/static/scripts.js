@@ -81,42 +81,55 @@ $(document).ready(function () {
       $('#candidate-selection').removeClass('d-none');
       $('#candidate-confirmation').addClass('d-none');
       $('#candidate-number').val('');
+      $('#candidate-suggestions').empty();
     } else {
       $('#candidate-selection').addClass('d-none');
       $('#candidate-confirmation').addClass('d-none');
     }
   });
 
-  // Confirmar número do candidato
-  $('#confirm-candidate').on('click', function () {
+  // Buscar candidatos conforme o código é digitado
+  $('#candidate-number').on('input', function () {
     let cargoId = $('#cargo-dropdown').val();
-    let candidateNumber = $('#candidate-number').val();
+    let candidateNumber = $(this).val();
 
-    if (!candidateNumber) {
-      alert('Por favor, digite o número do candidato.');
-      return;
-    }
+    if (candidateNumber.length > 0) {
+      $.ajax({
+        url: BACKEND_URL + `/buscar-candidatos/${cargoId}/${candidateNumber}`,
+        type: 'GET',
+        success: function (response) {
+          let suggestions = $('#candidate-suggestions');
+          suggestions.empty();
+          response.forEach(function (candidate) {
+            suggestions.append(`
+              <div class="candidate-suggestion" data-id="${candidate.id}">
+                <p><strong>Nome:</strong> ${candidate.nome}</p>
+                <p><strong>Partido:</strong> ${candidate.partido.sigla}</p>
+                <img src="${candidate.foto}" alt="Foto do Candidato" class="img-thumbnail">
+              </div>
+            `);
+          });
 
-    $.ajax({
-      url: BACKEND_URL + `/candidatos/${cargoId}`,
-      type: 'GET',
-      success: function (response) {
-        let candidate = response.find(c => c.codigo === candidateNumber);
-        if (candidate) {
-          $('#candidate-info').html(`
-            <p><strong>Nome:</strong> ${candidate.nome}</p>
-            <p><strong>Partido:</strong> ${candidate.partido.sigla}</p>
-            <img src="${candidate.foto}" alt="Foto do Candidato" class="img-thumbnail">
-          `);
-          $('#candidate-confirmation').removeClass('d-none');
-        } else {
-          alert('Candidato não encontrado.');
+          // Adicionar evento de clique nas sugestões
+          $('.candidate-suggestion').on('click', function () {
+            let candidateId = $(this).data('id');
+            let candidate = response.find(c => c.id === candidateId);
+            $('#candidate-info').html(`
+              <p><strong>Nome:</strong> ${candidate.nome}</p>
+              <p><strong>Partido:</strong> ${candidate.partido.sigla}</p>
+              <img src="${candidate.foto}" alt="Foto do Candidato" class="img-thumbnail">
+            `);
+            $('#candidate-confirmation').removeClass('d-none');
+          });
+        },
+        error: function (error) {
+          console.error('Erro ao buscar candidatos:', error);
         }
-      },
-      error: function (error) {
-        console.error('Erro ao carregar candidatos:', error);
-      }
-    });
+      });
+    } else {
+      $('#candidate-suggestions').empty();
+      $('#candidate-confirmation').addClass('d-none');
+    }
   });
 
   // Confirmar voto
