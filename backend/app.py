@@ -138,6 +138,19 @@ async def listar_candidatos_por_cargo(cargo_id: int):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/buscar-candidatos/{cargo_id}/{codigo}")
+async def buscar_candidatos_por_codigo(cargo_id: int, codigo: str):
+    try:
+        candidatos = []
+        for key in redis_client.scan_iter(f"candidato:*"):
+            candidato = json.loads(redis_client.get(key))
+            if candidato['cargo']['id'] == cargo_id and candidato['codigo'].startswith(codigo):
+                candidatos.append(candidato)
+        return JSONResponse(content=candidatos, status_code=200)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post("/votar")
 async def votar(voto: Voto):
     try:
