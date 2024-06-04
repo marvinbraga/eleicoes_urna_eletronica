@@ -13,7 +13,7 @@ class Partido(BaseModel):
 class Cargo(BaseModel):
     id: int = Field(..., description="ID único do cargo")
     nome: str = Field(..., description="Nome do cargo")
-    eleicao: str = Field(..., description="Eleição a qual o cargo pertence")
+    eleicao: int = Field(..., description="ID da eleição a qual o cargo pertence")
 
 
 class Eleicao(BaseModel):
@@ -39,6 +39,7 @@ class Voto(BaseModel):
     hash_localizacao: str = Field(..., description="Hash de localização do voto na listagem de votos da urna")
     hash_blockchain: str = Field(..., description="Hash do registro do voto no Blockchain")
     qr_code: str = Field(..., description="QR Code contendo todas as informações do voto")
+    data_hora: datetime = Field(default_factory=datetime.now, description="Data e hora do voto")
 
 
 class RegistroImpresso(BaseModel):

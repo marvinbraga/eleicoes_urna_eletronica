@@ -1,16 +1,17 @@
 import json
 import os
+from datetime import datetime
 
 import redis
 from dotenv import load_dotenv
-from fastapi import FastAPI, UploadFile, File, HTTPException, Request
+from fastapi import FastAPI, UploadFile, File, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from loguru import logger
 
-from core.models.classes import Eleicao, Partido, Cargo, Candidato
+from core.models.classes import Eleicao, Partido, Cargo, Candidato, Voto, TotalizacaoVotos
 
 load_dotenv()
 
@@ -60,8 +61,13 @@ async def get_index(request: Request):
 
 
 @app.post("/upload-keys")
-async def upload_keys(cryptography_key: UploadFile = File(...), private_key: UploadFile = File(...)):
+async def upload_keys(
+        cryptography_key: UploadFile = File(...),
+        private_key: UploadFile = File(...),
+        election_data: UploadFile = File(...)
+):
     try:
+        # Salvar as chaves de segurança
         cryptography_key_path = os.path.join(UPLOAD_DIRECTORY, cryptography_key.filename)
         private_key_path = os.path.join(UPLOAD_DIRECTORY, private_key.filename)
 
@@ -71,57 +77,11 @@ async def upload_keys(cryptography_key: UploadFile = File(...), private_key: Upl
         with open(private_key_path, "wb") as f:
             f.write(await private_key.read())
 
-        return JSONResponse(content={"message": "Chaves enviadas com sucesso!"}, status_code=200)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.get("/keys-status")
-async def keys_status():
-    cryptography_key_path = os.path.join(UPLOAD_DIRECTORY, "cryptography_key.pem")
-    private_key_path = os.path.join(UPLOAD_DIRECTORY, "private_key.pem")
-
-    keys_exist = os.path.exists(cryptography_key_path) and os.path.exists(private_key_path)
-    return JSONResponse(content={"keys_exist": keys_exist}, status_code=200)
-
-
-# Endpoints para cadastrar dados
-@app.post("/eleicao")
-async def create_eleicao(eleicao: Eleicao):
-    # Salvar a eleição no Redis
-    redis_client.set(f"eleicao:{eleicao.id}", eleicao.json())
-    return eleicao
-
-
-@app.post("/partido")
-async def create_partido(partido: Partido):
-    # Salvar o partido no Redis
-    redis_client.set(f"partido:{partido.numero}", partido.json())
-    return partido
-
-
-@app.post("/cargo")
-async def create_cargo(cargo: Cargo):
-    # Salvar o cargo no Redis
-    redis_client.set(f"cargo:{cargo.id}", cargo.json())
-    return cargo
-
-
-@app.post("/candidato")
-async def create_candidato(candidato: Candidato):
-    # Salvar o candidato no Redis
-    redis_client.set(f"candidato:{candidato.id}", candidato.json())
-    return candidato
-
-
-@app.post("/upload-eleicao")
-async def upload_eleicao(file: UploadFile = File(...)):
-    try:
-        # Ler o conteúdo do arquivo JSON
-        contents = await file.read()
+        # Processar o arquivo JSON da eleição
+        contents = await election_data.read()
         data = json.loads(contents)
 
-        # Processar os dados do JSON e inicializar a urna
+        # Inicializar os dados da eleição
         eleicao = Eleicao(**data['eleicao'])
         partidos = [Partido(**partido) for partido in data['partidos']]
         cargos = [Cargo(**cargo) for cargo in data['cargos']]
@@ -136,10 +96,91 @@ async def upload_eleicao(file: UploadFile = File(...)):
         for candidato in candidatos:
             redis_client.set(f"candidato:{candidato.id}", candidato.json())
 
-        return JSONResponse(
-            content={"message": "Dados da eleição enviados e processados com sucesso!"},
-            status_code=200
-        )
+        return JSONResponse(content={"message": "Chaves e dados da eleição enviados com sucesso!"}, status_code=200)
     except Exception as e:
-        logger.error(f"Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/keys-status")
+async def keys_status():
+    cryptography_key_path = os.path.join(UPLOAD_DIRECTORY, "cryptography_key.pem")
+    private_key_path = os.path.join(UPLOAD_DIRECTORY, "private_key.pem")
+
+    keys_exist = os.path.exists(cryptography_key_path) and os.path.exists(private_key_path)
+    return JSONResponse(content={"keys_exist": keys_exist}, status_code=200)
+
+
+@app.get("/cargos/{eleicao_id}")
+async def listar_cargos(eleicao_id: int):
+    try:
+        cargos = []
+        for key in redis_client.scan_iter(f"cargo:*"):
+            cargo = json.loads(redis_client.get(key))
+            logger.info(f"Cargo encontrado: {cargo}")  # Adicionando log para depuração
+            if cargo['eleicao'] == eleicao_id:
+                cargos.append(cargo)
+        logger.info(f"Cargos filtrados: {cargos}")  # Adicionando log para depuração
+        return JSONResponse(content=cargos, status_code=200)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/candidatos/{cargo_id}")
+async def listar_candidatos_por_cargo(cargo_id: int):
+    try:
+        candidatos = []
+        for key in redis_client.scan_iter(f"candidato:*"):
+            candidato = json.loads(redis_client.get(key))
+            if candidato['cargo']['id'] == cargo_id:
+                candidatos.append(candidato)
+        return JSONResponse(content=candidatos, status_code=200)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/votar")
+async def votar(voto: Voto):
+    try:
+        # Verificar se o candidato existe
+        candidato_key = f"candidato:{voto.candidato.id}"
+        if not redis_client.exists(candidato_key):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Candidato não encontrado")
+
+        # Salvar o voto no Redis
+        redis_client.rpush(f"votos:{voto.candidato.eleicao.id}", voto.json())
+        return JSONResponse(content={"message": "Voto registrado com sucesso!"}, status_code=200)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/totalizar-votos/{eleicao_id}")
+async def totalizar_votos(eleicao_id: int):
+    try:
+        votos = []
+        for voto_json in redis_client.lrange(f"votos:{eleicao_id}", 0, -1):
+            voto = Voto.parse_raw(voto_json)
+            votos.append(voto)
+
+        totalizacao = TotalizacaoVotos(
+            id=eleicao_id,
+            data_hora=datetime.now(),
+            votos_totalizados=votos,
+            hash_blockchain="hash_blockchain_placeholder"
+        )
+
+        return JSONResponse(content=totalizacao.dict(), status_code=200)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/cargos/{eleicao_id}")
+async def listar_cargos(eleicao_id: int):
+    try:
+        cargos = []
+        for key in redis_client.scan_iter(f"cargo:*"):
+            cargo = json.loads(redis_client.get(key))
+            if cargo['eleicao'] == eleicao_id:
+                cargos.append(cargo)
+        return JSONResponse(content=cargos, status_code=200)
+    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

@@ -26,10 +26,11 @@ def run():
     partido1 = Partido(numero=45, sigla="PA", nome="Partido A")
     partido2 = Partido(numero=65, sigla="PB", nome="Partido B")
 
-    cargo1 = Cargo(id=1, nome="Prefeito", eleicao="Eleição Municipal")
-    cargo2 = Cargo(id=2, nome="Vereador", eleicao="Eleição Municipal")
-
     eleicao = Eleicao(id=1, nome="Eleição Municipal 2024", data="2024-10-06", turnos=1)
+
+    cargo1 = Cargo(id=1, nome="Prefeito", eleicao=eleicao.id)
+    cargo2 = Cargo(id=2, nome="Vereador", eleicao=eleicao.id)
+
 
     # Votação
     candidato1 = Candidato(

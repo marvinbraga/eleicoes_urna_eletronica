@@ -7,7 +7,6 @@
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/static/styles.css">
     <script>
-      // Carregar a URL do servidor FastAPI a partir de uma variável de ambiente
       const BACKEND_URL = "{{ BACKEND_URL }}";
     </script>
 </head>
@@ -15,7 +14,7 @@
 <div class="container mt-5">
     <h1 class="text-center">Urna Eletrônica</h1>
     <div id="upload-keys" class="mt-4">
-        <h3>Upload de Chaves de Segurança</h3>
+        <h3>Upload de Chaves de Segurança e Dados da Eleição</h3>
         <form id="key-upload-form">
             <div class="form-group">
                 <label for="cryptography_key">Chave de Criptografia (.pem)</label>
@@ -25,22 +24,33 @@
                 <label for="private_key">Chave Privada (.pem)</label>
                 <input type="file" class="form-control-file" id="private_key" accept=".pem">
             </div>
-            <button type="submit" class="btn btn-primary">Enviar Chaves</button>
-        </form>
-    </div>
-    <div id="upload-eleicao" class="mt-4">
-        <h3>Upload de Dados da Eleição</h3>
-        <form id="eleicao-upload-form">
             <div class="form-group">
-                <label for="eleicao_file">Arquivo JSON da Eleição</label>
-                <input type="file" class="form-control-file" id="eleicao_file" accept=".json">
+                <label for="election_data">Arquivo JSON da Eleição</label>
+                <input type="file" class="form-control-file" id="election_data" accept=".json">
             </div>
-            <button type="submit" class="btn btn-primary">Enviar Dados da Eleição</button>
+            <button type="submit" class="btn btn-primary">Enviar Chaves e Dados da Eleição</button>
         </form>
     </div>
     <div id="voting-section" class="mt-5 d-none">
         <h3>Votação</h3>
-        <!-- Conteúdo da votação será adicionado aqui -->
+        <div id="cargo-selection" class="mt-4">
+            <h4>Selecione o Cargo</h4>
+            <select id="cargo-dropdown" class="form-control">
+                <!-- Opções de cargos serão carregadas aqui -->
+            </select>
+        </div>
+        <div id="candidate-selection" class="mt-4 d-none">
+            <h4>Digite o Número do Candidato</h4>
+            <input type="text" id="candidate-number" class="form-control" maxlength="5">
+            <button id="confirm-candidate" class="btn btn-primary mt-3">Confirmar</button>
+        </div>
+        <div id="candidate-confirmation" class="mt-4 d-none">
+            <h4>Confirme seu Voto</h4>
+            <div id="candidate-info">
+                <!-- Informações do candidato serão carregadas aqui -->
+            </div>
+            <button id="confirm-vote" class="btn btn-success mt-3">Confirmar Voto</button>
+        </div>
     </div>
 </div>
 

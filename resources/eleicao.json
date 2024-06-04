@@ -15,18 +15,48 @@
             "numero": 20,
             "sigla": "DEF",
             "nome": "Partido DEF"
+        },
+        {
+            "numero": 30,
+            "sigla": "GHI",
+            "nome": "Partido GHI"
+        },
+        {
+            "numero": 40,
+            "sigla": "JKL",
+            "nome": "Partido JKL"
+        },
+        {
+            "numero": 50,
+            "sigla": "MNO",
+            "nome": "Partido MNO"
         }
     ],
     "cargos": [
         {
             "id": 1,
             "nome": "Presidente",
-            "eleicao": "Eleição 2024"
+            "eleicao": 1
         },
         {
             "id": 2,
             "nome": "Governador",
-            "eleicao": "Eleição 2024"
+            "eleicao": 1
+        },
+        {
+            "id": 3,
+            "nome": "Senador",
+            "eleicao": 1
+        },
+        {
+            "id": 4,
+            "nome": "Deputado Federal",
+            "eleicao": 1
+        },
+        {
+            "id": 5,
+            "nome": "Deputado Estadual",
+            "eleicao": 1
         }
     ],
     "candidatos": [
@@ -39,17 +69,545 @@
                 "nome": "Partido ABC"
             },
             "codigo": "ABC1",
-            "foto": "url_da_foto",
+            "foto": "url_da_foto_1",
             "cargo": {
                 "id": 1,
                 "nome": "Presidente",
-                "eleicao": "Eleição 2024"
+                "eleicao": 1
             },
             "eleicao": {
                 "id": 1,
                 "nome": "Eleição 2024",
                 "data": "2024-10-01T00:00:00",
-                "turnos": 1
+                "turnos": 2
+            }
+        },
+        {
+            "id": 2,
+            "nome": "Candidato 2",
+            "partido": {
+                "numero": 20,
+                "sigla": "DEF",
+                "nome": "Partido DEF"
+            },
+            "codigo": "DEF1",
+            "foto": "url_da_foto_2",
+            "cargo": {
+                "id": 1,
+                "nome": "Presidente",
+                "eleicao": 1
+            },
+            "eleicao": {
+                "id": 1,
+                "nome": "Eleição 2024",
+                "data": "2024-10-01T00:00:00",
+                "turnos": 2
+            }
+        },
+        {
+            "id": 3,
+            "nome": "Candidato 3",
+            "partido": {
+                "numero": 30,
+                "sigla": "GHI",
+                "nome": "Partido GHI"
+            },
+            "codigo": "GHI1",
+            "foto": "url_da_foto_3",
+            "cargo": {
+                "id": 1,
+                "nome": "Presidente",
+                "eleicao": 1
+            },
+            "eleicao": {
+                "id": 1,
+                "nome": "Eleição 2024",
+                "data": "2024-10-01T00:00:00",
+                "turnos": 2
+            }
+        },
+        {
+            "id": 4,
+            "nome": "Candidato 4",
+            "partido": {
+                "numero": 40,
+                "sigla": "JKL",
+                "nome": "Partido JKL"
+            },
+            "codigo": "JKL1",
+            "foto": "url_da_foto_4",
+            "cargo": {
+                "id": 1,
+                "nome": "Presidente",
+                "eleicao": 1
+            },
+            "eleicao": {
+                "id": 1,
+                "nome": "Eleição 2024",
+                "data": "2024-10-01T00:00:00",
+                "turnos": 2
+            }
+        },
+        {
+            "id": 5,
+            "nome": "Candidato 5",
+            "partido": {
+                "numero": 50,
+                "sigla": "MNO",
+                "nome": "Partido MNO"
+            },
+            "codigo": "MNO1",
+            "foto": "url_da_foto_5",
+            "cargo": {
+                "id": 1,
+                "nome": "Presidente",
+                "eleicao": 1
+            },
+            "eleicao": {
+                "id": 1,
+                "nome": "Eleição 2024",
+                "data": "2024-10-01T00:00:00",
+                "turnos": 2
+            }
+        },
+        {
+            "id": 6,
+            "nome": "Candidato 6",
+            "partido": {
+                "numero": 10,
+                "sigla": "ABC",
+                "nome": "Partido ABC"
+            },
+            "codigo": "ABC2",
+            "foto": "url_da_foto_6",
+            "cargo": {
+                "id": 2,
+                "nome": "Governador",
+                "eleicao": 1
+            },
+            "eleicao": {
+                "id": 1,
+                "nome": "Eleição 2024",
+                "data": "2024-10-01T00:00:00",
+                "turnos": 2
+            }
+        },
+        {
+            "id": 7,
+            "nome": "Candidato 7",
+            "partido": {
+                "numero": 20,
+                "sigla": "DEF",
+                "nome": "Partido DEF"
+            },
+            "codigo": "DEF2",
+            "foto": "url_da_foto_7",
+            "cargo": {
+                "id": 2,
+                "nome": "Governador",
+                "eleicao": 1
+            },
+            "eleicao": {
+                "id": 1,
+                "nome": "Eleição 2024",
+                "data": "2024-10-01T00:00:00",
+                "turnos": 2
+            }
+        },
+        {
+            "id": 8,
+            "nome": "Candidato 8",
+            "partido": {
+                "numero": 30,
+                "sigla": "GHI",
+                "nome": "Partido GHI"
+            },
+            "codigo": "GHI2",
+            "foto": "url_da_foto_8",
+            "cargo": {
+                "id": 2,
+                "nome": "Governador",
+                "eleicao": 1
+            },
+            "eleicao": {
+                "id": 1,
+                "nome": "Eleição 2024",
+                "data": "2024-10-01T00:00:00",
+                "turnos": 2
+            }
+        },
+        {
+            "id": 9,
+            "nome": "Candidato 9",
+            "partido": {
+                "numero": 40,
+                "sigla": "JKL",
+                "nome": "Partido JKL"
+            },
+            "codigo": "JKL2",
+            "foto": "url_da_foto_9",
+            "cargo": {
+                "id": 2,
+                "nome": "Governador",
+                "eleicao": 1
+            },
+            "eleicao": {
+                "id": 1,
+                "nome": "Eleição 2024",
+                "data": "2024-10-01T00:00:00",
+                "turnos": 2
+            }
+        },
+        {
+            "id": 10,
+            "nome": "Candidato 10",
+            "partido": {
+                "numero": 50,
+                "sigla": "MNO",
+                "nome": "Partido MNO"
+            },
+            "codigo": "MNO2",
+            "foto": "url_da_foto_10",
+            "cargo": {
+                "id": 2,
+                "nome": "Governador",
+                "eleicao": 1
+            },
+            "eleicao": {
+                "id": 1,
+                "nome": "Eleição 2024",
+                "data": "2024-10-01T00:00:00",
+                "turnos": 2
+            }
+        },
+        {
+            "id": 11,
+            "nome": "Candidato 11",
+            "partido": {
+                "numero": 10,
+                "sigla": "ABC",
+                "nome": "Partido ABC"
+            },
+            "codigo": "ABC3",
+            "foto": "url_da_foto_11",
+            "cargo": {
+                "id": 3,
+                "nome": "Senador",
+                "eleicao": 1
+            },
+            "eleicao": {
+                "id": 1,
+                "nome": "Eleição 2024",
+                "data": "2024-10-01T00:00:00",
+                "turnos": 2
+            }
+        },
+        {
+            "id": 12,
+            "nome": "Candidato 12",
+            "partido": {
+                "numero": 20,
+                "sigla": "DEF",
+                "nome": "Partido DEF"
+            },
+            "codigo": "DEF3",
+            "foto": "url_da_foto_12",
+            "cargo": {
+                "id": 3,
+                "nome": "Senador",
+                "eleicao": 1
+            },
+            "eleicao": {
+                "id": 1,
+                "nome": "Eleição 2024",
+                "data": "2024-10-01T00:00:00",
+                "turnos": 2
+            }
+        },
+        {
+            "id": 13,
+            "nome": "Candidato 13",
+            "partido": {
+                "numero": 30,
+                "sigla": "GHI",
+                "nome": "Partido GHI"
+            },
+            "codigo": "GHI3",
+            "foto": "url_da_foto_13",
+            "cargo": {
+                "id": 3,
+                "nome": "Senador",
+                "eleicao": 1
+            },
+            "eleicao": {
+                "id": 1,
+                "nome": "Eleição 2024",
+                "data": "2024-10-01T00:00:00",
+                "turnos": 2
+            }
+        },
+        {
+            "id": 14,
+            "nome": "Candidato 14",
+            "partido": {
+                "numero": 40,
+                "sigla": "JKL",
+                "nome": "Partido JKL"
+            },
+            "codigo": "JKL3",
+            "foto": "url_da_foto_14",
+            "cargo": {
+                "id": 3,
+                "nome": "Senador",
+                "eleicao": 1
+            },
+            "eleicao": {
+                "id": 1,
+                "nome": "Eleição 2024",
+                "data": "2024-10-01T00:00:00",
+                "turnos": 2
+            }
+        },
+        {
+            "id": 15,
+            "nome": "Candidato 15",
+            "partido": {
+                "numero": 50,
+                "sigla": "MNO",
+                "nome": "Partido MNO"
+            },
+            "codigo": "MNO3",
+            "foto": "url_da_foto_15",
+            "cargo": {
+                "id": 3,
+                "nome": "Senador",
+                "eleicao": 1
+            },
+            "eleicao": {
+                "id": 1,
+                "nome": "Eleição 2024",
+                "data": "2024-10-01T00:00:00",
+                "turnos": 2
+            }
+        },
+        {
+            "id": 16,
+            "nome": "Candidato 16",
+            "partido": {
+                "numero": 10,
+                "sigla": "ABC",
+                "nome": "Partido ABC"
+            },
+            "codigo": "ABC4",
+            "foto": "url_da_foto_16",
+            "cargo": {
+                "id": 4,
+                "nome": "Deputado Federal",
+                "eleicao": 1
+            },
+            "eleicao": {
+                "id": 1,
+                "nome": "Eleição 2024",
+                "data": "2024-10-01T00:00:00",
+                "turnos": 2
+            }
+        },
+        {
+            "id": 17,
+            "nome": "Candidato 17",
+            "partido": {
+                "numero": 20,
+                "sigla": "DEF",
+                "nome": "Partido DEF"
+            },
+            "codigo": "DEF4",
+            "foto": "url_da_foto_17",
+            "cargo": {
+                "id": 4,
+                "nome": "Deputado Federal",
+                "eleicao": 1
+            },
+            "eleicao": {
+                "id": 1,
+                "nome": "Eleição 2024",
+                "data": "2024-10-01T00:00:00",
+                "turnos": 2
+            }
+        },
+        {
+            "id": 18,
+            "nome": "Candidato 18",
+            "partido": {
+                "numero": 30,
+                "sigla": "GHI",
+                "nome": "Partido GHI"
+            },
+            "codigo": "GHI4",
+            "foto": "url_da_foto_18",
+            "cargo": {
+                "id": 4,
+                "nome": "Deputado Federal",
+                "eleicao": 1
+            },
+            "eleicao": {
+                "id": 1,
+                "nome": "Eleição 2024",
+                "data": "2024-10-01T00:00:00",
+                "turnos": 2
+            }
+        },
+        {
+            "id": 19,
+            "nome": "Candidato 19",
+            "partido": {
+                "numero": 40,
+                "sigla": "JKL",
+                "nome": "Partido JKL"
+            },
+            "codigo": "JKL4",
+            "foto": "url_da_foto_19",
+            "cargo": {
+                "id": 4,
+                "nome": "Deputado Federal",
+                "eleicao": 1
+            },
+            "eleicao": {
+                "id": 1,
+                "nome": "Eleição 2024",
+                "data": "2024-10-01T00:00:00",
+                "turnos": 2
+            }
+        },
+        {
+            "id": 20,
+            "nome": "Candidato 20",
+            "partido": {
+                "numero": 50,
+                "sigla": "MNO",
+                "nome": "Partido MNO"
+            },
+            "codigo": "MNO4",
+            "foto": "url_da_foto_20",
+            "cargo": {
+                "id": 4,
+                "nome": "Deputado Federal",
+                "eleicao": 1
+            },
+            "eleicao": {
+                "id": 1,
+                "nome": "Eleição 2024",
+                "data": "2024-10-01T00:00:00",
+                "turnos": 2
+            }
+        },
+        {
+            "id": 21,
+            "nome": "Candidato 21",
+            "partido": {
+                "numero": 10,
+                "sigla": "ABC",
+                "nome": "Partido ABC"
+            },
+            "codigo": "ABC5",
+            "foto": "url_da_foto_21",
+            "cargo": {
+                "id": 5,
+                "nome": "Deputado Estadual",
+                "eleicao": 1
+            },
+            "eleicao": {
+                "id": 1,
+                "nome": "Eleição 2024",
+                "data": "2024-10-01T00:00:00",
+                "turnos": 2
+            }
+        },
+        {
+            "id": 22,
+            "nome": "Candidato 22",
+            "partido": {
+                "numero": 20,
+                "sigla": "DEF",
+                "nome": "Partido DEF"
+            },
+            "codigo": "DEF5",
+            "foto": "url_da_foto_22",
+            "cargo": {
+                "id": 5,
+                "nome": "Deputado Estadual",
+                "eleicao": 1
+            },
+            "eleicao": {
+                "id": 1,
+                "nome": "Eleição 2024",
+                "data": "2024-10-01T00:00:00",
+                "turnos": 2
+            }
+        },
+        {
+            "id": 23,
+            "nome": "Candidato 23",
+            "partido": {
+                "numero": 30,
+                "sigla": "GHI",
+                "nome": "Partido GHI"
+            },
+            "codigo": "GHI5",
+            "foto": "url_da_foto_23",
+            "cargo": {
+                "id": 5,
+                "nome": "Deputado Estadual",
+                "eleicao": 1
+            },
+            "eleicao": {
+                "id": 1,
+                "nome": "Eleição 2024",
+                "data": "2024-10-01T00:00:00",
+                "turnos": 2
+            }
+        },
+        {
+            "id": 24,
+            "nome": "Candidato 24",
+            "partido": {
+                "numero": 40,
+                "sigla": "JKL",
+                "nome": "Partido JKL"
+            },
+            "codigo": "JKL5",
+            "foto": "url_da_foto_24",
+            "cargo": {
+                "id": 5,
+                "nome": "Deputado Estadual",
+                "eleicao": 1
+            },
+            "eleicao": {
+                "id": 1,
+                "nome": "Eleição 2024",
+                "data": "2024-10-01T00:00:00",
+                "turnos": 2
+            }
+        },
+        {
+            "id": 25,
+            "nome": "Candidato 25",
+            "partido": {
+                "numero": 50,
+                "sigla": "MNO",
+                "nome": "Partido MNO"
+            },
+            "codigo": "MNO5",
+            "foto": "url_da_foto_25",
+            "cargo": {
+                "id": 5,
+                "nome": "Deputado Estadual",
+                "eleicao": 1
+            },
+            "eleicao": {
+                "id": 1,
+                "nome": "Eleição 2024",
+                "data": "2024-10-01T00:00:00",
+                "turnos": 2
             }
         }
     ]
