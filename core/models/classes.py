@@ -40,6 +40,7 @@ class Voto(BaseModel):
     hash_blockchain: str = Field(..., description="Hash do registro do voto no Blockchain")
     qr_code: str = Field(..., description="QR Code contendo todas as informações do voto")
     data_hora: datetime = Field(default_factory=datetime.now, description="Data e hora do voto")
+    nonce: str = Field(None, description="Nonce único para prevenir duplicação de votos")
 
 
 class RegistroImpresso(BaseModel):
