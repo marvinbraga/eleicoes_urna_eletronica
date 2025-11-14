@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escrutínio - Apuração Pública de Votos</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="/static/escrutinio.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script>
+      const BACKEND_URL = "{{ BACKEND_URL }}";
+    </script>
+</head>
+<body>
+    <div class="container-fluid">
+        <!-- Header -->
+        <div class="row header-section">
+            <div class="col-12">
+                <div class="header-content text-center">
+                    <h1>
+                        <i class="fas fa-chart-line"></i>
+                        ESCRUTÍNIO - APURAÇÃO PÚBLICA DE VOTOS
+                    </h1>
+                    <p class="lead">Sistema de Contagem e Totalização em Tempo Real</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Painel de Controle -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card shadow-lg">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">
+                            <i class="fas fa-cog"></i> Painel de Controle da Apuração
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <button id="btn-totalizar" class="btn btn-lg btn-info btn-block">
+                                    <i class="fas fa-calculator"></i> Totalizar Votos
+                                </button>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <button id="btn-atualizar" class="btn btn-lg btn-success btn-block">
+                                    <i class="fas fa-sync-alt"></i> Atualizar Resultados
+                                </button>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <button id="btn-boletim" class="btn btn-lg btn-warning btn-block">
+                                    <i class="fas fa-file-alt"></i> Gerar Boletim de Urna
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Auto-atualização -->
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" id="auto-refresh">
+                                    <label class="custom-control-label" for="auto-refresh">
+                                        <i class="fas fa-sync"></i> Atualização Automática (a cada 5 segundos)
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6 text-right">
+                                <span class="badge badge-info badge-lg">
+                                    <i class="fas fa-clock"></i> Última atualização: <span id="ultima-atualizacao">Nunca</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estatísticas Gerais -->
+        <div class="row mt-4">
+            <div class="col-md-3">
+                <div class="card stats-card stats-total">
+                    <div class="card-body text-center">
+                        <i class="fas fa-vote-yea"></i>
+                        <h3 id="total-votos">0</h3>
+                        <p>Total de Votos</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stats-card stats-validos">
+                    <div class="card-body text-center">
+                        <i class="fas fa-check-circle"></i>
+                        <h3 id="votos-validos">0</h3>
+                        <p>Votos Válidos</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stats-card stats-brancos">
+                    <div class="card-body text-center">
+                        <i class="fas fa-file"></i>
+                        <h3 id="votos-brancos">0</h3>
+                        <p>Votos em Branco</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stats-card stats-nulos">
+                    <div class="card-body text-center">
+                        <i class="fas fa-times-circle"></i>
+                        <h3 id="votos-nulos">0</h3>
+                        <p>Votos Nulos</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resultados por Cargo -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card shadow-lg">
+                    <div class="card-header bg-dark text-white">
+                        <h4 class="mb-0">
+                            <i class="fas fa-poll"></i> Resultados por Cargo
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <div id="resultados-cargos">
+                            <div class="text-center py-5">
+                                <i class="fas fa-inbox" style="font-size: 4rem; color: #cbd5e0;"></i>
+                                <h4 class="mt-3 text-muted">Nenhum resultado disponível</h4>
+                                <p class="text-muted">Clique em "Totalizar Votos" para gerar os resultados</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráficos -->
+        <div class="row mt-4" id="graficos-container" style="display: none;">
+            <div class="col-md-6 mb-4">
+                <div class="card shadow">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-chart-pie"></i> Distribuição Geral</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="chart-distribuicao"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card shadow">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Votos por Candidato</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="chart-candidatos"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Boletim de Urna -->
+        <div class="row mt-4" id="boletim-container" style="display: none;">
+            <div class="col-12">
+                <div class="card shadow-lg border-warning">
+                    <div class="card-header bg-warning">
+                        <h4 class="mb-0">
+                            <i class="fas fa-certificate"></i> Boletim de Urna (BU)
+                        </h4>
+                    </div>
+                    <div class="card-body" id="boletim-content">
+                        <!-- Conteúdo do boletim será inserido aqui -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Auditoria e Segurança -->
+        <div class="row mt-4 mb-4">
+            <div class="col-12">
+                <div class="card shadow border-primary">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">
+                            <i class="fas fa-shield-alt"></i> Auditoria e Segurança
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <div id="auditoria-info">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6><i class="fas fa-link"></i> Integridade Blockchain</h6>
+                                    <p class="status-item">
+                                        <span id="blockchain-status" class="badge badge-secondary">Aguardando totalização</span>
+                                    </p>
+                                    <div id="blockchain-hash" class="code-box" style="display: none;">
+                                        <small>Hash:</small>
+                                        <code id="hash-value"></code>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6><i class="fas fa-signature"></i> Assinatura Digital</h6>
+                                    <p class="status-item">
+                                        <span id="signature-status" class="badge badge-secondary">Aguardando totalização</span>
+                                    </p>
+                                    <div id="signature-info" style="display: none;">
+                                        <small>Algoritmo: RSA-2048 + HMAC-PSS + SHA-256</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navegação -->
+        <div class="row mb-4">
+            <div class="col-12 text-center">
+                <a href="/urna.html" class="btn btn-lg btn-primary">
+                    <i class="fas fa-vote-yea"></i> Voltar para Urna
+                </a>
+                <a href="/" class="btn btn-lg btn-secondary ml-2">
+                    <i class="fas fa-tools"></i> Administração
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Loading -->
+    <div class="modal fade" id="loadingModal" tabindex="-1" role="dialog" data-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-body text-center py-5">
+                    <div class="spinner-border text-primary" role="status" style="width: 4rem; height: 4rem;">
+                        <span class="sr-only">Carregando...</span>
+                    </div>
+                    <h4 class="mt-3" id="loading-message">Processando...</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="/static/escrutinio.js"></script>
+</body>
+</html>
