@@ -1,6 +1,7 @@
 import json
 import os
 from datetime import datetime
+from typing import Optional
 
 import redis
 from dotenv import load_dotenv
@@ -10,8 +11,17 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from loguru import logger
+from pydantic import BaseModel
 
 from core.models.classes import Eleicao, Partido, Cargo, Candidato, Voto, TotalizacaoVotos
+from core.processors.classes import SistemaVotacao
+from core.utils.qr_code_gen import QRCodeService
+
+
+# Modelo para receber dados de voto do frontend
+class VotoRequest(BaseModel):
+    candidato: Candidato
+
 
 load_dotenv()
 
@@ -54,6 +64,10 @@ UPLOAD_DIRECTORY = "uploaded_keys"
 if not os.path.exists(UPLOAD_DIRECTORY):
     os.makedirs(UPLOAD_DIRECTORY)
 
+# Instância global do sistema de votação (será inicializada quando as chaves forem carregadas)
+sistema_votacao: Optional[SistemaVotacao] = None
+qr_code_service = QRCodeService()
+
 
 @app.get("/")
 async def get_index(request: Request):
@@ -66,10 +80,11 @@ async def upload_keys(
         private_key: UploadFile = File(...),
         election_data: UploadFile = File(...)
 ):
+    global sistema_votacao
     try:
         # Salvar as chaves de segurança
-        cryptography_key_path = os.path.join(UPLOAD_DIRECTORY, cryptography_key.filename)
-        private_key_path = os.path.join(UPLOAD_DIRECTORY, private_key.filename)
+        cryptography_key_path = os.path.join(UPLOAD_DIRECTORY, "cryptography_key.pem")
+        private_key_path = os.path.join(UPLOAD_DIRECTORY, "private_key.pem")
 
         with open(cryptography_key_path, "wb") as f:
             f.write(await cryptography_key.read())
@@ -96,8 +111,13 @@ async def upload_keys(
         for candidato in candidatos:
             redis_client.set(f"candidato:{candidato.id}", candidato.json())
 
+        # Inicializar o sistema de votação com as chaves carregadas
+        sistema_votacao = SistemaVotacao(private_key_path, cryptography_key_path)
+        logger.info("Sistema de votação inicializado com sucesso!")
+
         return JSONResponse(content={"message": "Chaves e dados da eleição enviados com sucesso!"}, status_code=200)
     except Exception as e:
+        logger.error(f"Erro ao fazer upload das chaves: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -152,48 +172,157 @@ async def buscar_candidatos_por_codigo(cargo_id: int, codigo: str):
 
 
 @app.post("/votar")
-async def votar(voto: Voto):
+async def votar(voto_request: VotoRequest):
+    global sistema_votacao
     try:
-        # Verificar se o candidato existe
-        candidato_key = f"candidato:{voto.candidato.id}"
+        # Verificar se o sistema de votação foi inicializado
+        if sistema_votacao is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Sistema de votação não inicializado. Faça o upload das chaves primeiro."
+            )
+
+        # Verificar se o candidato existe no Redis
+        candidato_key = f"candidato:{voto_request.candidato.id}"
         if not redis_client.exists(candidato_key):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Candidato não encontrado")
 
+        # Registrar o voto usando o sistema de votação
+        voto = sistema_votacao.votar(voto_request.candidato)
+
+        # Gerar QR code do voto
+        voto_data = {
+            "id": voto.id,
+            "candidato_id": voto.candidato.id,
+            "candidato_nome": voto.candidato.nome,
+            "hash_blockchain": voto.hash_blockchain,
+            "hash_localizacao": voto.hash_localizacao,
+            "data_hora": voto.data_hora.isoformat() if hasattr(voto.data_hora, 'isoformat') else str(voto.data_hora)
+        }
+        qr_code_base64 = qr_code_service.gerar_qr_code(json.dumps(voto_data))
+
+        # Atualizar o voto com o QR code em base64
+        voto.qr_code = f"data:image/png;base64,{qr_code_base64}"
+
         # Salvar o voto no Redis
-        redis_client.rpush(f"votos:{voto.candidato.eleicao.id}", voto.json())
-        return JSONResponse(content={"message": "Voto registrado com sucesso!"}, status_code=200)
+        redis_client.rpush(f"votos:{voto_request.candidato.eleicao.id}", voto.json())
+
+        logger.info(f"Voto registrado: ID={voto.id}, Candidato={voto.candidato.nome}")
+
+        # Retornar o voto completo com QR code
+        return JSONResponse(
+            content={
+                "message": "Voto registrado com sucesso!",
+                "voto": json.loads(voto.json())
+            },
+            status_code=200
+        )
+    except HTTPException:
+        raise
     except Exception as e:
+        logger.error(f"Erro ao registrar voto: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erro ao registrar voto: {str(e)}")
+
+
+@app.post("/verificar-voto")
+async def verificar_voto(qr_code_data: dict):
+    """Verifica um voto através dos dados do QR code"""
+    global sistema_votacao
+    try:
+        if sistema_votacao is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Sistema de votação não inicializado."
+            )
+
+        # Extrair dados do QR code
+        voto_id = qr_code_data.get("id")
+        hash_blockchain = qr_code_data.get("hash_blockchain")
+
+        if not voto_id or not hash_blockchain:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Dados do QR code inválidos."
+            )
+
+        # Verificar se o voto existe na blockchain
+        found = False
+        for block in sistema_votacao.blockchain.chain:
+            if block.hash == hash_blockchain:
+                found = True
+                break
+
+        if found:
+            logger.info(f"Voto {voto_id} verificado com sucesso!")
+            return JSONResponse(
+                content={
+                    "valido": True,
+                    "message": "Voto verificado com sucesso!",
+                    "voto_id": voto_id
+                },
+                status_code=200
+            )
+        else:
+            logger.warning(f"Voto {voto_id} não encontrado na blockchain!")
+            return JSONResponse(
+                content={
+                    "valido": False,
+                    "message": "Voto não encontrado na blockchain.",
+                    "voto_id": voto_id
+                },
+                status_code=200
+            )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erro ao verificar voto: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/totalizar-votos/{eleicao_id}")
 async def totalizar_votos(eleicao_id: int):
+    global sistema_votacao
     try:
-        votos = []
-        for voto_json in redis_client.lrange(f"votos:{eleicao_id}", 0, -1):
-            voto = Voto.parse_raw(voto_json)
-            votos.append(voto)
+        # Verificar se o sistema de votação foi inicializado
+        if sistema_votacao is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Sistema de votação não inicializado."
+            )
 
-        totalizacao = TotalizacaoVotos(
-            id=eleicao_id,
-            data_hora=datetime.now(),
-            votos_totalizados=votos,
-            hash_blockchain="hash_blockchain_placeholder"
-        )
+        # Totalizar votos usando o sistema de votação
+        totalizacao = sistema_votacao.totalizar_votos()
 
-        return JSONResponse(content=totalizacao.dict(), status_code=200)
+        logger.info(f"Totalização de votos realizada para eleição {eleicao_id}")
+
+        return JSONResponse(content=json.loads(totalizacao.json()), status_code=200)
+    except HTTPException:
+        raise
     except Exception as e:
+        logger.error(f"Erro ao totalizar votos: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/cargos/{eleicao_id}")
-async def listar_cargos(eleicao_id: int):
+@app.get("/gerar-boletim-urna")
+async def gerar_boletim_urna():
+    """Gera o Boletim de Urna com todos os votos registrados"""
+    global sistema_votacao
     try:
-        cargos = []
-        for key in redis_client.scan_iter(f"cargo:*"):
-            cargo = json.loads(redis_client.get(key))
-            if cargo['eleicao'] == eleicao_id:
-                cargos.append(cargo)
-        return JSONResponse(content=cargos, status_code=200)
+        if sistema_votacao is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Sistema de votação não inicializado."
+            )
+
+        # Gerar boletim de urna
+        boletim = sistema_votacao.gerar_boletim_urna()
+
+        logger.info(f"Boletim de Urna gerado: ID={boletim.id}")
+
+        return JSONResponse(content=json.loads(boletim.json()), status_code=200)
+    except HTTPException:
+        raise
     except Exception as e:
+        logger.error(f"Erro ao gerar boletim de urna: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
