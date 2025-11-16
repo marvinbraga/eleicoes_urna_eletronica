@@ -74,6 +74,16 @@ async def get_index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request, "BACKEND_URL": BACKEND_URL})
 
 
+@app.get("/urna.html")
+async def get_urna(request: Request):
+    return templates.TemplateResponse("urna.html", {"request": request, "BACKEND_URL": BACKEND_URL})
+
+
+@app.get("/escrutinio.html")
+async def get_escrutinio(request: Request):
+    return templates.TemplateResponse("escrutinio.html", {"request": request, "BACKEND_URL": BACKEND_URL})
+
+
 @app.post("/upload-keys")
 async def upload_keys(
         cryptography_key: UploadFile = File(...),
