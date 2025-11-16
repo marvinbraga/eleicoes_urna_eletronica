@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Urna Eletrônica - Sistema de Votação</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="/static/urna.css">
+    <script>
+      const BACKEND_URL = "{{ BACKEND_URL }}";
+    </script>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row mt-4">
+            <div class="col-12 text-center">
+                <h2 class="mb-4">
+                    <i class="fas fa-vote-yea"></i> Sistema de Votação Eletrônica
+                </h2>
+            </div>
+        </div>
+
+        <!-- Upload de Chaves -->
+        <div id="upload-keys" class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h4><i class="fas fa-key"></i> Inicialização da Urna</h4>
+                    </div>
+                    <div class="card-body">
+                        <form id="key-upload-form">
+                            <div class="form-group">
+                                <label for="cryptography_key">
+                                    <i class="fas fa-lock"></i> Chave de Criptografia (.pem)
+                                </label>
+                                <input type="file" class="form-control-file" id="cryptography_key" accept=".pem" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="private_key">
+                                    <i class="fas fa-shield-alt"></i> Chave Privada (.pem)
+                                </label>
+                                <input type="file" class="form-control-file" id="private_key" accept=".pem" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="election_data">
+                                    <i class="fas fa-file-alt"></i> Arquivo JSON da Eleição
+                                </label>
+                                <input type="file" class="form-control-file" id="election_data" accept=".json" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block">
+                                <i class="fas fa-upload"></i> Inicializar Urna
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Urna Eletrônica -->
+        <div id="urna-container" class="row justify-content-center d-none">
+            <div class="col-lg-10 col-xl-8">
+                <div class="urna-wrapper">
+                    <!-- Display da Urna -->
+                    <div class="urna-display">
+                        <div class="display-header">
+                            <div class="brasao">
+                                <i class="fas fa-landmark"></i>
+                            </div>
+                            <h5>JUSTIÇA ELEITORAL</h5>
+                        </div>
+
+                        <div id="display-content" class="display-content">
+                            <!-- Conteúdo dinâmico será inserido aqui -->
+                            <div class="text-center py-5">
+                                <h3>Aguarde...</h3>
+                                <p>Carregando informações da eleição</p>
+                            </div>
+                        </div>
+
+                        <div class="display-footer">
+                            <small>Sistema Eletrônico de Votação</small>
+                        </div>
+                    </div>
+
+                    <!-- Teclado da Urna -->
+                    <div class="urna-keyboard">
+                        <div class="keyboard-grid">
+                            <!-- Números -->
+                            <button class="key-number" data-number="1">1</button>
+                            <button class="key-number" data-number="2">2</button>
+                            <button class="key-number" data-number="3">3</button>
+                            <button class="key-number" data-number="4">4</button>
+                            <button class="key-number" data-number="5">5</button>
+                            <button class="key-number" data-number="6">6</button>
+                            <button class="key-number" data-number="7">7</button>
+                            <button class="key-number" data-number="8">8</button>
+                            <button class="key-number" data-number="9">9</button>
+                            <button class="key-number" data-number="0">0</button>
+                        </div>
+
+                        <div class="keyboard-actions">
+                            <button class="key-action key-branco" id="btn-branco">
+                                <span>BRANCO</span>
+                            </button>
+                            <button class="key-action key-corrige" id="btn-corrige">
+                                <span>CORRIGE</span>
+                            </button>
+                            <button class="key-action key-confirma" id="btn-confirma">
+                                <span>CONFIRMA</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Indicadores de Status -->
+                <div class="urna-status mt-3">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="status-item">
+                                <i class="fas fa-signal"></i>
+                                <span id="status-connection">Conectado</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="status-item">
+                                <i class="fas fa-vote-yea"></i>
+                                <span id="status-votes">0 votos</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="status-item">
+                                <i class="fas fa-lock"></i>
+                                <span>Criptografado</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Links de Navegação -->
+        <div class="row mt-4 mb-4">
+            <div class="col-12 text-center">
+                <a href="/escrutinio.html" class="btn btn-info btn-lg">
+                    <i class="fas fa-chart-bar"></i> Acessar Escrutínio
+                </a>
+                <a href="/" class="btn btn-secondary btn-lg ml-2">
+                    <i class="fas fa-tools"></i> Administração
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Feedback -->
+    <div class="modal fade" id="feedbackModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-body text-center py-5">
+                    <div id="feedback-content">
+                        <!-- Conteúdo dinâmico -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="/static/urna.js"></script>
+</body>
+</html>
