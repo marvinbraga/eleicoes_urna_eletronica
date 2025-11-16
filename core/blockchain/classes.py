@@ -1,49 +1,173 @@
+from __future__ import annotations
+
 import hashlib
 import json
 from datetime import datetime
+from typing import Optional, List, Dict, Any
 
 
 class Block:
-    def __init__(self, index, timestamp, transactions, previous_hash):
-        self.index = index
-        self.timestamp = timestamp
-        self.transactions = transactions
-        self.previous_hash = previous_hash
-        self.hash = self.calculate_hash()
+    """
+    Representa um bloco na blockchain.
+    """
+    def __init__(
+        self,
+        index: int,
+        timestamp: datetime,
+        transactions: List[Any],
+        previous_hash: str
+    ) -> None:
+        """
+        Inicializa um novo bloco.
 
-    def calculate_hash(self):
+        :param index: Índice do bloco na cadeia.
+        :param timestamp: Timestamp de criação do bloco.
+        :param transactions: Lista de transações incluídas no bloco.
+        :param previous_hash: Hash do bloco anterior.
+        """
+        self.index: int = index
+        self.timestamp: datetime = timestamp
+        self.transactions: List[Any] = transactions
+        self.previous_hash: str = previous_hash
+        self.hash: str = self.calculate_hash()
+        # Lazy loading: transações são carregadas sob demanda
+        self._transactions_loaded: bool = True
+
+    def calculate_hash(self) -> str:
+        """
+        Calcula o hash SHA-256 do bloco.
+
+        :return: Hash do bloco como string hexadecimal.
+        """
         data_string = json.dumps(self.transactions, sort_keys=True)
-        return hashlib.sha256(f"{self.index}{self.timestamp}{data_string}{self.previous_hash}".encode()).hexdigest()
+        timestamp_str = self.timestamp.isoformat()
+        return hashlib.sha256(f"{self.index}{timestamp_str}{data_string}{self.previous_hash}".encode()).hexdigest()
+
+    def to_dict(self) -> Dict[str, Any]:
+        """
+        Converte o bloco para dicionário.
+
+        :return: Dicionário com os dados do bloco.
+        """
+        return {
+            'index': self.index,
+            'timestamp': self.timestamp.isoformat(),
+            'transactions': self.transactions,
+            'previous_hash': self.previous_hash,
+            'hash': self.hash
+        }
 
 
 class Blockchain:
-    def __init__(self):
-        self.chain = [self.create_genesis_block()]
-        self.pending_transactions = []
+    """
+    Implementação otimizada da Blockchain com índices e cache.
+    """
+    def __init__(self) -> None:
+        """
+        Inicializa a blockchain com o bloco genesis.
+        """
+        self.chain: List[Block] = [self.create_genesis_block()]
+        self.pending_transactions: List[Any] = []
+        # Índice de hash para busca rápida O(1)
+        self._hash_index: Dict[str, Block] = {}
+        # Cache de blocos para acesso rápido
+        self._block_cache: Dict[int, Block] = {}
+        # Inicializar índices
+        self._rebuild_indexes()
 
-    def create_genesis_block(self):
-        return Block(0, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), [], "0")
+    def create_genesis_block(self) -> Block:
+        """
+        Cria o bloco gênesis (primeiro bloco da cadeia).
 
-    def add_block(self, transactions):
+        :return: Bloco genesis.
+        """
+        return Block(0, datetime.now(), [], "0")
+
+    def add_block(self, transactions: List[Any]) -> None:
+        """
+        Adiciona um novo bloco à cadeia.
+
+        :param transactions: Lista de transações a serem incluídas no bloco.
+        """
         previous_block = self.chain[-1]
-        new_block = Block(len(self.chain), datetime.now().strftime("%Y-%m-%d %H:%M:%S"), transactions,
-                          previous_block.hash)
+        new_block = Block(
+            len(self.chain),
+            datetime.now(),
+            transactions,
+            previous_block.hash
+        )
         self.chain.append(new_block)
+        # Atualizar índices
+        self._add_to_index(new_block)
 
-    def add_transaction(self, transaction):
+    def add_transaction(self, transaction: Any) -> None:
+        """
+        Adiciona uma transação à lista de transações pendentes.
+
+        :param transaction: Transação a ser adicionada.
+        """
         self.pending_transactions.append(transaction)
 
-    def mine_pending_transactions(self):
+    def mine_pending_transactions(self) -> None:
+        """
+        Minera as transações pendentes criando um novo bloco.
+        """
         if len(self.pending_transactions) > 0:
             self.add_block(self.pending_transactions)
             self.pending_transactions = []
 
-    def get_block_by_index(self, index):
+    def get_block_by_index(self, index: int) -> Optional[Block]:
+        """
+        Busca um bloco por índice com cache.
+
+        :param index: Índice do bloco.
+        :return: Bloco ou None se o índice for inválido.
+        """
+        # Verificar cache primeiro
+        if index in self._block_cache:
+            return self._block_cache[index]
+
+        # Buscar na cadeia
         if 0 <= index < len(self.chain):
-            return self.chain[index]
+            block = self.chain[index]
+            # Adicionar ao cache
+            self._block_cache[index] = block
+            return block
         return None
 
-    def is_chain_valid(self):
+    def get_block_by_hash(self, block_hash: str) -> Optional[Block]:
+        """
+        Busca um bloco por hash usando índice otimizado O(1).
+
+        :param block_hash: Hash do bloco.
+        :return: Bloco ou None se não encontrado.
+        """
+        return self._hash_index.get(block_hash)
+
+    def _add_to_index(self, block: Block) -> None:
+        """
+        Adiciona bloco aos índices.
+
+        :param block: Bloco a ser indexado.
+        """
+        self._hash_index[block.hash] = block
+        self._block_cache[block.index] = block
+
+    def _rebuild_indexes(self) -> None:
+        """
+        Reconstrói os índices a partir da cadeia existente.
+        """
+        self._hash_index.clear()
+        self._block_cache.clear()
+        for block in self.chain:
+            self._add_to_index(block)
+
+    def is_chain_valid(self) -> bool:
+        """
+        Valida a integridade da blockchain.
+
+        :return: True se a blockchain for válida, False caso contrário.
+        """
         for i in range(1, len(self.chain)):
             current_block = self.chain[i]
             previous_block = self.chain[i - 1]
@@ -53,40 +177,35 @@ class Blockchain:
                 return False
         return True
 
+    def is_empty(self) -> bool:
+        """
+        Verifica se a blockchain está vazia (contém apenas o bloco genesis).
 
-class VotingSystem:
-    def __init__(self):
-        self.blockchain = Blockchain()
-        self.votes = {}
+        :return: True se a blockchain contém apenas o bloco genesis, False caso contrário.
+        """
+        return len(self.chain) <= 1
 
-    def add_vote(self, voter_id, candidate_id):
-        if voter_id not in self.votes:
-            transaction = {
-                "voter_id": voter_id,
-                "candidate_id": candidate_id
-            }
-            self.blockchain.add_transaction(transaction)
-            self.votes[voter_id] = candidate_id
-            return True
-        return False
+    def get_last_block(self) -> Block:
+        """
+        Retorna o último bloco da blockchain.
 
-    def tally_votes(self):
-        self.blockchain.mine_pending_transactions()
-        tally = {}
-        for block in self.blockchain.chain:
-            for transaction in block.transactions:
-                candidate_id = transaction["candidate_id"]
-                if candidate_id in tally:
-                    tally[candidate_id] += 1
-                else:
-                    tally[candidate_id] = 1
-        return tally
+        :return: O último bloco da blockchain.
+        :raises: ValueError se a blockchain estiver vazia.
+        """
+        if len(self.chain) == 0:
+            raise ValueError("Blockchain está vazia")
+        return self.chain[-1]
 
-    def get_vote(self, voter_id):
-        return self.votes.get(voter_id)
+    def get_chain_stats(self) -> Dict[str, Any]:
+        """
+        Retorna estatísticas da blockchain.
 
-    def verify_vote(self, voter_id, candidate_id):
-        vote = self.get_vote(voter_id)
-        if vote == candidate_id:
-            return True
-        return False
+        :return: Dicionário com estatísticas da blockchain.
+        """
+        return {
+            'total_blocks': len(self.chain),
+            'pending_transactions': len(self.pending_transactions),
+            'last_block_hash': self.chain[-1].hash if self.chain else None,
+            'cache_size': len(self._block_cache),
+            'index_size': len(self._hash_index)
+        }

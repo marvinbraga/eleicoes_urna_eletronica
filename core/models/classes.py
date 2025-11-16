@@ -1,7 +1,8 @@
 # models/classes.py
 from datetime import datetime
+from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class Partido(BaseModel):
@@ -34,7 +35,7 @@ class Candidato(BaseModel):
 
 
 class Voto(BaseModel):
-    id: int = Field(..., description="ID único do voto")
+    id: str = Field(..., description="ID único do voto (UUID)")
     candidato: Candidato = Field(..., description="Candidato votado")
     hash_localizacao: str = Field(..., description="Hash de localização do voto na listagem de votos da urna")
     hash_blockchain: str = Field(..., description="Hash do registro do voto no Blockchain")
@@ -61,6 +62,64 @@ class BoletimUrna(BaseModel):
     votos: list[Voto] = Field(..., description="Lista de votos registrados na urna")
     assinatura: str = Field(None, description="Assinatura digital do Boletim de Urna")
 
+    @field_validator('secao')
+    @classmethod
+    def validate_secao(cls, v: str) -> str:
+        """
+        Valida o formato da seção eleitoral.
+        Formato esperado: "Seção" seguido de número ou nome.
+        """
+        if not v or len(v.strip()) < 3:
+            raise ValueError('Seção deve ter no mínimo 3 caracteres')
+        return v.strip()
+
+    @field_validator('zona')
+    @classmethod
+    def validate_zona(cls, v: str) -> str:
+        """
+        Valida o formato da zona eleitoral.
+        Formato esperado: "Zona" seguido de número.
+        """
+        if not v or len(v.strip()) < 3:
+            raise ValueError('Zona deve ter no mínimo 3 caracteres')
+        return v.strip()
+
+    @field_validator('municipio')
+    @classmethod
+    def validate_municipio(cls, v: str) -> str:
+        """
+        Valida o nome do município.
+        """
+        if not v or len(v.strip()) < 3:
+            raise ValueError('Município deve ter no mínimo 3 caracteres')
+        if not all(c.isalpha() or c.isspace() for c in v):
+            raise ValueError('Município deve conter apenas letras e espaços')
+        return v.strip()
+
+    @field_validator('estado')
+    @classmethod
+    def validate_estado(cls, v: str) -> str:
+        """
+        Valida o nome ou sigla do estado.
+        """
+        if not v or len(v.strip()) < 2:
+            raise ValueError('Estado deve ter no mínimo 2 caracteres')
+
+        # Lista de siglas válidas dos estados brasileiros
+        siglas_validas = [
+            'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
+            'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN',
+            'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
+        ]
+
+        v_upper = v.strip().upper()
+
+        # Aceita siglas válidas ou nomes de estados
+        if len(v_upper) == 2 and v_upper not in siglas_validas:
+            raise ValueError(f'Sigla de estado inválida: {v}. Use uma sigla válida: {", ".join(siglas_validas)}')
+
+        return v.strip()
+
 
 class RegistroUrna(BaseModel):
     id: int = Field(..., description="ID único do Registro de Urna")
@@ -75,3 +134,52 @@ class TotalizacaoVotos(BaseModel):
     votos_totalizados: list[Voto] = Field(..., description="Lista de votos totalizados")
     hash_blockchain: str = Field(..., description="Hash do Blockchain da totalização dos votos")
     assinatura: str = Field(None, description="Assinatura digital da Totalização de Votos")
+
+
+class User(BaseModel):
+    """Modelo de usuário para autenticação"""
+    username: str = Field(..., min_length=3, max_length=50, description="Nome de usuário único")
+    email: str = Field(..., description="Email do usuário")
+    full_name: Optional[str] = Field(None, max_length=100, description="Nome completo do usuário")
+    disabled: bool = Field(default=False, description="Indica se o usuário está desabilitado")
+    scopes: list[str] = Field(default_factory=list, description="Permissões do usuário")
+
+    @field_validator('username')
+    @classmethod
+    def validate_username(cls, v):
+        """Valida que o username contém apenas caracteres alfanuméricos e underscore"""
+        if not v.replace('_', '').isalnum():
+            raise ValueError('Username deve conter apenas letras, números e underscore')
+        return v
+
+
+class UserInDB(User):
+    """Modelo de usuário armazenado no banco de dados (inclui hash da senha)"""
+    hashed_password: str = Field(..., description="Hash bcrypt da senha do usuário")
+
+
+class UserCreate(BaseModel):
+    """Modelo para criação de usuário"""
+    username: str = Field(..., min_length=3, max_length=50)
+    email: str
+    password: str = Field(..., min_length=8, max_length=100)
+    full_name: Optional[str] = Field(None, max_length=100)
+    scopes: list[str] = Field(default_factory=list)
+
+    @field_validator('password')
+    @classmethod
+    def validate_password(cls, v):
+        """Valida força da senha"""
+        if len(v) < 8:
+            raise ValueError('Senha deve ter no mínimo 8 caracteres')
+        if not any(char.isdigit() for char in v):
+            raise ValueError('Senha deve conter pelo menos um número')
+        if not any(char.isupper() for char in v):
+            raise ValueError('Senha deve conter pelo menos uma letra maiúscula')
+        return v
+
+
+class LoginRequest(BaseModel):
+    """Modelo para requisição de login"""
+    username: str = Field(..., min_length=3, max_length=50)
+    password: str = Field(..., min_length=1, max_length=100)

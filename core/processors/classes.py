@@ -16,9 +16,14 @@ from cryptography.hazmat.primitives.asymmetric import padding
 from sklearn.ensemble import IsolationForest
 
 from core.blockchain.classes import Blockchain
+from core.config import settings
+from core.constants import ANOMALY_CONTAMINATION, ANOMALY_THRESHOLD, COLLUSION_THRESHOLD, N_ESTIMATORS
 from core.models.classes import Voto, BoletimUrna, Candidato, RegistroImpresso, RegistroUrna, TotalizacaoVotos
 from core.settings import ROOT_DIR
 from core.utils.datetime import datetime_to_string
+
+# Configurar logger para o módulo
+logger = logging.getLogger(__name__)
 
 
 class IntegrityVerifier:
@@ -206,6 +211,7 @@ class VotoService:
         self.nonce_generator = nonce_generator
         self.audit_logger = audit_logger
         self.votos: List[Voto] = []
+        self.nonces_processados: set = set()
 
     def votar(self, candidato: Candidato) -> Voto:
         """
@@ -214,44 +220,65 @@ class VotoService:
         :param candidato: O candidato a ser votado.
         :return: O voto registrado.
         """
-        # Cria um novo voto com os dados do candidato e informações adicionais
-        voto = Voto(
-            id=len(self.votos) + 1,
+        voto = self._criar_voto(candidato)
+        voto_assinado = self._assinar_voto(voto)
+        voto_criptografado = self._criptografar_voto(voto_assinado)
+        self._adicionar_blockchain(voto, voto_criptografado)
+        return voto
+
+    def _criar_voto(self, candidato: Candidato) -> Voto:
+        """
+        Cria um novo voto com os dados do candidato.
+
+        :param candidato: O candidato a ser votado.
+        :return: O voto criado.
+        """
+        last_block = self.blockchain.get_last_block()
+        voto_id = str(uuid.uuid4())
+        return Voto(
+            id=voto_id,
             candidato=candidato,
-            hash_localizacao=self.blockchain.chain[-1].hash,
-            hash_blockchain=self.blockchain.chain[-1].hash,
-            qr_code=f"qrcode_{len(self.votos) + 1}",
+            hash_localizacao=last_block.hash,
+            hash_blockchain=last_block.hash,
+            qr_code=f"qrcode_{voto_id}",
             nonce=self.nonce_generator.generate_nonce()
         )
 
-        # Converte o voto para JSON
+    def _assinar_voto(self, voto: Voto) -> dict:
+        """
+        Assina o voto usando o serviço de criptografia.
+
+        :param voto: O voto a ser assinado.
+        :return: Objeto contendo o voto e a assinatura.
+        """
         voto_json = voto.json()
-
-        # Assina o voto usando o serviço de criptografia
         assinatura = self.criptografia_service.assinar_dados(voto_json)
-
-        # Cria um objeto contendo o voto e a assinatura
-        voto_assinado = {
+        return {
             "voto": voto_json,
             "assinatura": base64.b64encode(assinatura).decode()
         }
 
-        # Criptografa o voto assinado usando o serviço de criptografia
-        voto_criptografado = self.criptografia_service.criptografar_dados(json.dumps(voto_assinado))
+    def _criptografar_voto(self, voto_assinado: dict) -> str:
+        """
+        Criptografa o voto assinado.
 
-        # Adiciona o voto à lista de votos
+        :param voto_assinado: O voto assinado a ser criptografado.
+        :return: O voto criptografado.
+        """
+        return self.criptografia_service.criptografar_dados(json.dumps(voto_assinado))
+
+    def _adicionar_blockchain(self, voto: Voto, voto_criptografado: str) -> None:
+        """
+        Adiciona o voto à lista de votos e à blockchain.
+
+        :param voto: O voto a ser adicionado.
+        :param voto_criptografado: O voto criptografado a ser adicionado à blockchain.
+        """
         self.votos.append(voto)
-
-        # Adiciona o voto criptografado como uma transação na blockchain
+        self.nonces_processados.add(voto.nonce)
         self.blockchain.add_transaction(voto_criptografado)
-
-        # Minera as transações pendentes na blockchain
         self.blockchain.mine_pending_transactions()
-
-        # Registra o voto no logger de auditoria
         self.audit_logger.log(f"Voto registrado: {voto}")
-
-        return voto
 
     def validar_votos(self, registros_impressos: List[RegistroImpresso]) -> bool:
         """
@@ -299,16 +326,17 @@ class VotoService:
                 # Converte o JSON do voto para um objeto Voto
                 voto = Voto.parse_raw(voto_json)
 
-                # Verifica se o nonce do voto já existe na lista de votos
-                if voto.nonce not in [v.nonce for v in self.votos]:
+                # Verifica se o nonce do voto já foi processado
+                if voto.nonce not in self.nonces_processados:
                     # Adiciona o voto à lista de votos
                     self.votos.append(voto)
+                    self.nonces_processados.add(voto.nonce)
 
                     # Adiciona o voto criptografado como uma transação na blockchain
                     self.blockchain.add_transaction(voto_criptografado)
                 else:
                     # Registra uma tentativa de voto duplicado no logger de auditoria
-                    self.audit_logger.log(f"Tentativa de voto duplicado: {voto}")
+                    self.audit_logger.log(f"Tentativa de voto duplicado (nonce: {voto.nonce}): {voto}")
             else:
                 # Registra um voto inválido no logger de auditoria
                 self.audit_logger.log(f"Voto inválido: assinatura não confere - {voto_json}")
@@ -340,15 +368,16 @@ class BoletimUrnaService:
         :return: O boletim de urna gerado.
         """
         # Cria um novo boletim de urna com os dados relevantes
+        last_block = self.voto_service.blockchain.get_last_block()
         boletim = BoletimUrna(
             id=len(self.boletins_urna) + 1,
-            secao="Seção XYZ",
-            zona="Zona 123",
-            municipio="Município ABC",
-            estado="Estado MN",
+            secao=settings.secao,
+            zona=settings.zona,
+            municipio=settings.municipio,
+            estado=settings.estado,
             data_hora=datetime.now(),
-            hash_final_blockchain=self.voto_service.blockchain.chain[-1].hash,
-            hash_bu=self.voto_service.blockchain.chain[-1].hash,
+            hash_final_blockchain=last_block.hash,
+            hash_bu=last_block.hash,
             qr_code=f"qrcode_bu_{len(self.boletins_urna) + 1}",
             votos=self.voto_service.votos
         )
@@ -457,7 +486,7 @@ class TotalizacaoVotosService:
         if self.criptografia_service.verificar_assinatura(voto_json, assinatura):
             return Voto.parse_raw(voto_json)
         else:
-            print("Voto inválido: assinatura não confere")
+            logger.warning(f"Voto inválido: assinatura não confere - {voto_json}")
             return None
 
     def _atualizar_contagem_votos(self, tally: dict, voto: Voto):
@@ -505,11 +534,12 @@ class TotalizacaoVotosService:
         :param votos_totalizados: A lista de votos totalizados.
         :return: O objeto de totalização de votos.
         """
+        last_block = self.voto_service.blockchain.get_last_block()
         return TotalizacaoVotos(
             id=1,
             data_hora=datetime.now(),
             votos_totalizados=votos_totalizados,
-            hash_blockchain=self.voto_service.blockchain.chain[-1].hash
+            hash_blockchain=last_block.hash
         )
 
     def _assinar_totalizacao(self, totalizacao: TotalizacaoVotos):
@@ -548,7 +578,7 @@ class AnomaliaService:
         """
         Inicializa o serviço de detecção de anomalias com os parâmetros do Isolation Forest.
         """
-        self.isolation_forest = IsolationForest(n_estimators=100, contamination=0.1)
+        self.isolation_forest = IsolationForest(n_estimators=N_ESTIMATORS, contamination=ANOMALY_CONTAMINATION)
 
     def _extrair_caracteristicas(self, voto):
         """
@@ -562,12 +592,13 @@ class AnomaliaService:
         hash_blockchain = hash(voto.hash_blockchain) % 1000000
         return [candidato_id, hash_localizacao, hash_blockchain]
 
-    def detectar_anomalias(self, votos):
+    def _detectar_com_threshold(self, votos, threshold):
         """
-        Detecta anomalias nos votos usando o algoritmo Isolation Forest.
+        Detecta votos suspeitos usando o algoritmo Isolation Forest com um threshold específico.
 
         :param votos: A lista de votos a serem analisados.
-        :return: Uma lista contendo os votos considerados anômalos.
+        :param threshold: O threshold para identificar votos suspeitos.
+        :return: Uma lista contendo os votos que atendem ao critério do threshold.
         """
         # Extrai as características dos votos
         caracteristicas = [self._extrair_caracteristicas(voto) for voto in votos]
@@ -578,10 +609,19 @@ class AnomaliaService:
         # Calcula os scores de anomalia para cada voto
         anomaly_scores = self.isolation_forest.decision_function(caracteristicas)
 
-        # Identifica os votos anômalos com base nos scores de anomalia
-        anomalias = [voto for voto, score in zip(votos, anomaly_scores) if score < 0]
+        # Identifica os votos suspeitos com base no threshold
+        votos_suspeitos = [voto for voto, score in zip(votos, anomaly_scores) if score < threshold]
 
-        return anomalias
+        return votos_suspeitos
+
+    def detectar_anomalias(self, votos):
+        """
+        Detecta anomalias nos votos usando o algoritmo Isolation Forest.
+
+        :param votos: A lista de votos a serem analisados.
+        :return: Uma lista contendo os votos considerados anômalos.
+        """
+        return self._detectar_com_threshold(votos, ANOMALY_THRESHOLD)
 
     def detectar_conluio(self, votos):
         """
@@ -590,19 +630,7 @@ class AnomaliaService:
         :param votos: A lista de votos a serem analisados.
         :return: Uma lista contendo os votos suspeitos de conluio.
         """
-        # Extrai as características dos votos
-        caracteristicas = [self._extrair_caracteristicas(voto) for voto in votos]
-
-        # Treina o modelo Isolation Forest com as características dos votos
-        self.isolation_forest.fit(caracteristicas)
-
-        # Calcula os scores de anomalia para cada voto
-        anomaly_scores = self.isolation_forest.decision_function(caracteristicas)
-
-        # Identifica os votos suspeitos de conluio com base em um threshold mais restritivo
-        conluio_suspeito = [voto for voto, score in zip(votos, anomaly_scores) if score < -0.5]
-
-        return conluio_suspeito
+        return self._detectar_com_threshold(votos, COLLUSION_THRESHOLD)
 
 
 class SistemaVotacao:
