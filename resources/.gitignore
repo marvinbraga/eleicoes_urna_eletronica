@@ -1,0 +1,5 @@
+# Never commit real cryptographic keys
+*.pem
+!*.pem.example
+private_key.pem
+cryptography_key.pem

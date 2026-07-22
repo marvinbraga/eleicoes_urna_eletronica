@@ -144,4 +144,7 @@ cython_debug/
 # Poetry
 poetry.lock
 
-uploaded_keys/
+uploaded_keys/resources/private_key.pem
+resources/cryptography_key.pem
+*.pem
+!resources/*.pem.example

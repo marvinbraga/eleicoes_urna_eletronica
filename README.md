@@ -298,3 +298,16 @@ Para questões e suporte, abra uma issue no GitHub.
 ---
 
 Desenvolvido com ❤️ para garantir eleições seguras e transparentes.
+
+## Segurança das chaves
+
+As chaves em `resources/` **não são versionadas**. Gere localmente:
+
+```bash
+poetry run python scripts/generate_election_keys.py
+# ou
+openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out resources/private_key.pem
+python -c "from cryptography.fernet import Fernet; open('resources/cryptography_key.pem','w').write(Fernet.generate_key().decode())"
+```
+
+Nunca faça commit de `private_key.pem` ou `cryptography_key.pem`.
