@@ -36,27 +36,37 @@
         {
             "id": 1,
             "nome": "Presidente",
-            "eleicao": 1
+            "eleicao": 1,
+            "numero_digitos": 2,
+            "votos_por_eleitor": 1
         },
         {
             "id": 2,
             "nome": "Governador",
-            "eleicao": 1
+            "eleicao": 1,
+            "numero_digitos": 2,
+            "votos_por_eleitor": 1
         },
         {
             "id": 3,
             "nome": "Senador",
-            "eleicao": 1
+            "eleicao": 1,
+            "numero_digitos": 3,
+            "votos_por_eleitor": 2
         },
         {
             "id": 4,
             "nome": "Deputado Federal",
-            "eleicao": 1
+            "eleicao": 1,
+            "numero_digitos": 4,
+            "votos_por_eleitor": 1
         },
         {
             "id": 5,
             "nome": "Deputado Estadual",
-            "eleicao": 1
+            "eleicao": 1,
+            "numero_digitos": 5,
+            "votos_por_eleitor": 1
         }
     ],
     "candidatos": [
@@ -69,11 +79,13 @@
                 "nome": "Partido ABC"
             },
             "codigo": "10",
-            "foto": "url_da_foto_1",
+            "foto": "/static/fotos/candidato-01.jpg",
             "cargo": {
                 "id": 1,
                 "nome": "Presidente",
-                "eleicao": 1
+                "eleicao": 1,
+                "numero_digitos": 2,
+                "votos_por_eleitor": 1
             },
             "eleicao": {
                 "id": 1,
@@ -91,11 +103,13 @@
                 "nome": "Partido DEF"
             },
             "codigo": "20",
-            "foto": "url_da_foto_2",
+            "foto": "/static/fotos/candidato-02.jpg",
             "cargo": {
                 "id": 1,
                 "nome": "Presidente",
-                "eleicao": 1
+                "eleicao": 1,
+                "numero_digitos": 2,
+                "votos_por_eleitor": 1
             },
             "eleicao": {
                 "id": 1,
@@ -113,11 +127,13 @@
                 "nome": "Partido GHI"
             },
             "codigo": "30",
-            "foto": "url_da_foto_3",
+            "foto": "/static/fotos/candidato-03.jpg",
             "cargo": {
                 "id": 1,
                 "nome": "Presidente",
-                "eleicao": 1
+                "eleicao": 1,
+                "numero_digitos": 2,
+                "votos_por_eleitor": 1
             },
             "eleicao": {
                 "id": 1,
@@ -135,11 +151,13 @@
                 "nome": "Partido JKL"
             },
             "codigo": "40",
-            "foto": "url_da_foto_4",
+            "foto": "/static/fotos/candidato-04.jpg",
             "cargo": {
                 "id": 1,
                 "nome": "Presidente",
-                "eleicao": 1
+                "eleicao": 1,
+                "numero_digitos": 2,
+                "votos_por_eleitor": 1
             },
             "eleicao": {
                 "id": 1,
@@ -157,11 +175,13 @@
                 "nome": "Partido MNO"
             },
             "codigo": "50",
-            "foto": "url_da_foto_5",
+            "foto": "/static/fotos/candidato-05.jpg",
             "cargo": {
                 "id": 1,
                 "nome": "Presidente",
-                "eleicao": 1
+                "eleicao": 1,
+                "numero_digitos": 2,
+                "votos_por_eleitor": 1
             },
             "eleicao": {
                 "id": 1,
@@ -179,11 +199,13 @@
                 "nome": "Partido ABC"
             },
             "codigo": "10",
-            "foto": "url_da_foto_6",
+            "foto": "/static/fotos/candidato-06.jpg",
             "cargo": {
                 "id": 2,
                 "nome": "Governador",
-                "eleicao": 1
+                "eleicao": 1,
+                "numero_digitos": 2,
+                "votos_por_eleitor": 1
             },
             "eleicao": {
                 "id": 1,
@@ -201,11 +223,13 @@
                 "nome": "Partido DEF"
             },
             "codigo": "20",
-            "foto": "url_da_foto_7",
+            "foto": "/static/fotos/candidato-07.jpg",
             "cargo": {
                 "id": 2,
                 "nome": "Governador",
-                "eleicao": 1
+                "eleicao": 1,
+                "numero_digitos": 2,
+                "votos_por_eleitor": 1
             },
             "eleicao": {
                 "id": 1,
@@ -223,11 +247,13 @@
                 "nome": "Partido GHI"
             },
             "codigo": "30",
-            "foto": "url_da_foto_8",
+            "foto": "/static/fotos/candidato-08.jpg",
             "cargo": {
                 "id": 2,
                 "nome": "Governador",
-                "eleicao": 1
+                "eleicao": 1,
+                "numero_digitos": 2,
+                "votos_por_eleitor": 1
             },
             "eleicao": {
                 "id": 1,
@@ -245,11 +271,13 @@
                 "nome": "Partido JKL"
             },
             "codigo": "40",
-            "foto": "url_da_foto_9",
+            "foto": "/static/fotos/candidato-09.jpg",
             "cargo": {
                 "id": 2,
                 "nome": "Governador",
-                "eleicao": 1
+                "eleicao": 1,
+                "numero_digitos": 2,
+                "votos_por_eleitor": 1
             },
             "eleicao": {
                 "id": 1,
@@ -267,11 +295,13 @@
                 "nome": "Partido MNO"
             },
             "codigo": "50",
-            "foto": "url_da_foto_10",
+            "foto": "/static/fotos/candidato-10.jpg",
             "cargo": {
                 "id": 2,
                 "nome": "Governador",
-                "eleicao": 1
+                "eleicao": 1,
+                "numero_digitos": 2,
+                "votos_por_eleitor": 1
             },
             "eleicao": {
                 "id": 1,
@@ -289,11 +319,13 @@
                 "nome": "Partido ABC"
             },
             "codigo": "100",
-            "foto": "url_da_foto_11",
+            "foto": "/static/fotos/candidato-11.jpg",
             "cargo": {
                 "id": 3,
                 "nome": "Senador",
-                "eleicao": 1
+                "eleicao": 1,
+                "numero_digitos": 3,
+                "votos_por_eleitor": 2
             },
             "eleicao": {
                 "id": 1,
@@ -311,11 +343,13 @@
                 "nome": "Partido DEF"
             },
             "codigo": "200",
-            "foto": "url_da_foto_12",
+            "foto": "/static/fotos/candidato-12.jpg",
             "cargo": {
                 "id": 3,
                 "nome": "Senador",
-                "eleicao": 1
+                "eleicao": 1,
+                "numero_digitos": 3,
+                "votos_por_eleitor": 2
             },
             "eleicao": {
                 "id": 1,
@@ -333,11 +367,13 @@
                 "nome": "Partido GHI"
             },
             "codigo": "300",
-            "foto": "url_da_foto_13",
+            "foto": "/static/fotos/candidato-13.jpg",
             "cargo": {
                 "id": 3,
                 "nome": "Senador",
-                "eleicao": 1
+                "eleicao": 1,
+                "numero_digitos": 3,
+                "votos_por_eleitor": 2
             },
             "eleicao": {
                 "id": 1,
@@ -355,11 +391,13 @@
                 "nome": "Partido JKL"
             },
             "codigo": "400",
-            "foto": "url_da_foto_14",
+            "foto": "/static/fotos/candidato-14.jpg",
             "cargo": {
                 "id": 3,
                 "nome": "Senador",
-                "eleicao": 1
+                "eleicao": 1,
+                "numero_digitos": 3,
+                "votos_por_eleitor": 2
             },
             "eleicao": {
                 "id": 1,
@@ -377,11 +415,13 @@
                 "nome": "Partido MNO"
             },
             "codigo": "500",
-            "foto": "url_da_foto_15",
+            "foto": "/static/fotos/candidato-15.jpg",
             "cargo": {
                 "id": 3,
                 "nome": "Senador",
-                "eleicao": 1
+                "eleicao": 1,
+                "numero_digitos": 3,
+                "votos_por_eleitor": 2
             },
             "eleicao": {
                 "id": 1,
@@ -399,11 +439,13 @@
                 "nome": "Partido ABC"
             },
             "codigo": "1000",
-            "foto": "url_da_foto_16",
+            "foto": "/static/fotos/candidato-16.jpg",
             "cargo": {
                 "id": 4,
                 "nome": "Deputado Federal",
-                "eleicao": 1
+                "eleicao": 1,
+                "numero_digitos": 4,
+                "votos_por_eleitor": 1
             },
             "eleicao": {
                 "id": 1,
@@ -421,11 +463,13 @@
                 "nome": "Partido DEF"
             },
             "codigo": "2000",
-            "foto": "url_da_foto_17",
+            "foto": "/static/fotos/candidato-17.jpg",
             "cargo": {
                 "id": 4,
                 "nome": "Deputado Federal",
-                "eleicao": 1
+                "eleicao": 1,
+                "numero_digitos": 4,
+                "votos_por_eleitor": 1
             },
             "eleicao": {
                 "id": 1,
@@ -443,11 +487,13 @@
                 "nome": "Partido GHI"
             },
             "codigo": "3000",
-            "foto": "url_da_foto_18",
+            "foto": "/static/fotos/candidato-18.jpg",
             "cargo": {
                 "id": 4,
                 "nome": "Deputado Federal",
-                "eleicao": 1
+                "eleicao": 1,
+                "numero_digitos": 4,
+                "votos_por_eleitor": 1
             },
             "eleicao": {
                 "id": 1,
@@ -465,11 +511,13 @@
                 "nome": "Partido JKL"
             },
             "codigo": "4000",
-            "foto": "url_da_foto_19",
+            "foto": "/static/fotos/candidato-19.jpg",
             "cargo": {
                 "id": 4,
                 "nome": "Deputado Federal",
-                "eleicao": 1
+                "eleicao": 1,
+                "numero_digitos": 4,
+                "votos_por_eleitor": 1
             },
             "eleicao": {
                 "id": 1,
@@ -487,11 +535,13 @@
                 "nome": "Partido MNO"
             },
             "codigo": "5000",
-            "foto": "url_da_foto_20",
+            "foto": "/static/fotos/candidato-20.jpg",
             "cargo": {
                 "id": 4,
                 "nome": "Deputado Federal",
-                "eleicao": 1
+                "eleicao": 1,
+                "numero_digitos": 4,
+                "votos_por_eleitor": 1
             },
             "eleicao": {
                 "id": 1,
@@ -509,11 +559,13 @@
                 "nome": "Partido ABC"
             },
             "codigo": "10000",
-            "foto": "url_da_foto_21",
+            "foto": "/static/fotos/candidato-21.jpg",
             "cargo": {
                 "id": 5,
                 "nome": "Deputado Estadual",
-                "eleicao": 1
+                "eleicao": 1,
+                "numero_digitos": 5,
+                "votos_por_eleitor": 1
             },
             "eleicao": {
                 "id": 1,
@@ -531,11 +583,13 @@
                 "nome": "Partido DEF"
             },
             "codigo": "20000",
-            "foto": "url_da_foto_22",
+            "foto": "/static/fotos/candidato-22.jpg",
             "cargo": {
                 "id": 5,
                 "nome": "Deputado Estadual",
-                "eleicao": 1
+                "eleicao": 1,
+                "numero_digitos": 5,
+                "votos_por_eleitor": 1
             },
             "eleicao": {
                 "id": 1,
@@ -553,11 +607,13 @@
                 "nome": "Partido GHI"
             },
             "codigo": "30000",
-            "foto": "url_da_foto_23",
+            "foto": "/static/fotos/candidato-23.jpg",
             "cargo": {
                 "id": 5,
                 "nome": "Deputado Estadual",
-                "eleicao": 1
+                "eleicao": 1,
+                "numero_digitos": 5,
+                "votos_por_eleitor": 1
             },
             "eleicao": {
                 "id": 1,
@@ -575,11 +631,13 @@
                 "nome": "Partido JKL"
             },
             "codigo": "40000",
-            "foto": "url_da_foto_24",
+            "foto": "/static/fotos/candidato-24.jpg",
             "cargo": {
                 "id": 5,
                 "nome": "Deputado Estadual",
-                "eleicao": 1
+                "eleicao": 1,
+                "numero_digitos": 5,
+                "votos_por_eleitor": 1
             },
             "eleicao": {
                 "id": 1,
@@ -597,11 +655,13 @@
                 "nome": "Partido MNO"
             },
             "codigo": "50000",
-            "foto": "url_da_foto_25",
+            "foto": "/static/fotos/candidato-25.jpg",
             "cargo": {
                 "id": 5,
                 "nome": "Deputado Estadual",
-                "eleicao": 1
+                "eleicao": 1,
+                "numero_digitos": 5,
+                "votos_por_eleitor": 1
             },
             "eleicao": {
                 "id": 1,

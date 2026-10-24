@@ -10,8 +10,52 @@ $(document).ready(function () {
         votosBranco: 0,
         votosNulo: 0,
         votosValidos: 0,
+        votosConfirmadosNoCargo: 0,
+        candidatosJaVotados: [],
         fase: 'upload' // upload, selecao-cargo, digitacao, confirmacao, fim
     };
+
+    // Quantidade de dígitos do número na urna (padrão TSE). O cargo pode trazer numero_digitos.
+    const DIGITOS_POR_CARGO = {
+        'presidente': 2,
+        'governador': 2,
+        'senador': 3,
+        'deputado federal': 4,
+        'deputado estadual': 5,
+        'deputado distrital': 5,
+        'prefeito': 2,
+        'vereador': 5
+    };
+
+    function digitosDoCargo(cargo) {
+        const informado = Number(cargo && cargo.numero_digitos);
+        if (Number.isInteger(informado) && informado > 0) {
+            return informado;
+        }
+        const nome = (cargo && cargo.nome ? cargo.nome : '').trim().toLowerCase();
+        return DIGITOS_POR_CARGO[nome] || 5;
+    }
+
+    // Quantos candidatos o eleitor escolhe. No Senado da última eleição são 2.
+    const VOTOS_POR_CARGO = {
+        'presidente': 1,
+        'governador': 1,
+        'senador': 2,
+        'deputado federal': 1,
+        'deputado estadual': 1,
+        'deputado distrital': 1,
+        'prefeito': 1,
+        'vereador': 1
+    };
+
+    function votosDoCargo(cargo) {
+        const informado = Number(cargo && cargo.votos_por_eleitor);
+        if (Number.isInteger(informado) && informado > 0) {
+            return informado;
+        }
+        const nome = (cargo && cargo.nome ? cargo.nome : '').trim().toLowerCase();
+        return VOTOS_POR_CARGO[nome] || 1;
+    }
 
     // Sons (simulados com beep)
     const playBeep = () => {
@@ -121,10 +165,15 @@ $(document).ready(function () {
         `;
 
         appState.cargos.forEach((cargo, index) => {
+            const votos = votosDoCargo(cargo);
+            const digitos = digitosDoCargo(cargo);
+            const detalhe = votos > 1
+                ? `${votos} candidatos (${digitos} dígitos cada)`
+                : `1 candidato (${digitos} dígitos)`;
             html += `
                 <div class="cargo-option" data-cargo-id="${cargo.id}" data-index="${index}">
                     <h4>${cargo.nome}</h4>
-                    <p class="mb-0">Clique para votar neste cargo</p>
+                    <p class="mb-0">${detalhe}</p>
                 </div>
             `;
         });
@@ -147,6 +196,8 @@ $(document).ready(function () {
         appState.cargoAtual = cargo;
         appState.numeroDigitado = '';
         appState.candidatoSelecionado = null;
+        appState.votosConfirmadosNoCargo = 0;
+        appState.candidatosJaVotados = [];
         appState.fase = 'digitacao';
 
         mostrarTelaDigitacao();
@@ -154,7 +205,10 @@ $(document).ready(function () {
 
     // Mostrar tela de digitação
     function mostrarTelaDigitacao() {
-        const digitosNecessarios = appState.cargoAtual.numero_digitos || 5;
+        const digitosNecessarios = digitosDoCargo(appState.cargoAtual);
+        const totalVotos = votosDoCargo(appState.cargoAtual);
+        const ordem = appState.votosConfirmadosNoCargo + 1;
+        const progresso = totalVotos > 1 ? `Voto ${ordem} de ${totalVotos}. ` : '';
 
         let html = `
             <div class="tela-votacao fade-in">
@@ -163,7 +217,7 @@ $(document).ready(function () {
 
                 <div class="instrucao">
                     <i class="fas fa-keyboard"></i>
-                    Digite o número do candidato (${digitosNecessarios} dígitos)
+                    ${progresso}Digite o número do candidato (${digitosNecessarios} dígitos)
                 </div>
 
                 <div class="numero-display">
@@ -197,7 +251,7 @@ $(document).ready(function () {
     function digitarNumero(numero) {
         if (appState.fase !== 'digitacao') return;
 
-        const digitosNecessarios = appState.cargoAtual.numero_digitos || 5;
+        const digitosNecessarios = digitosDoCargo(appState.cargoAtual);
 
         if (appState.numeroDigitado.length < digitosNecessarios) {
             appState.numeroDigitado += numero;
@@ -217,6 +271,11 @@ $(document).ready(function () {
             type: 'GET',
             success: function (candidatos) {
                 if (candidatos && candidatos.length > 0) {
+                    if (appState.candidatosJaVotados.indexOf(candidatos[0].id) !== -1) {
+                        appState.candidatoSelecionado = null;
+                        mostrarCandidatoRepetido(candidatos[0]);
+                        return;
+                    }
                     appState.candidatoSelecionado = candidatos[0];
                     mostrarCandidato(candidatos[0]);
                 } else {
@@ -251,6 +310,22 @@ $(document).ready(function () {
 
         $('#candidato-preview').html(html);
         appState.fase = 'confirmacao';
+    }
+
+    function mostrarCandidatoRepetido(candidato) {
+        let html = `
+            <div class="voto-nulo fade-in">
+                <h4>CANDIDATO JÁ ESCOLHIDO</h4>
+                <p>${candidato.nome} já recebeu um voto seu para ${appState.cargoAtual.nome}</p>
+                <div class="instrucao mt-3">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Pressione CORRIGE e vote em outro candidato
+                </div>
+            </div>
+        `;
+
+        $('#candidato-preview').html(html);
+        appState.fase = 'digitacao';
     }
 
     // Mostrar voto nulo
@@ -337,6 +412,7 @@ $(document).ready(function () {
             data: JSON.stringify(voto),
             success: function (response) {
                 if (appState.candidatoSelecionado) {
+                    appState.candidatosJaVotados.push(appState.candidatoSelecionado.id);
                     appState.votosValidos++;
                 } else if (appState.numeroDigitado === '') {
                     appState.votosBranco++;
@@ -344,13 +420,22 @@ $(document).ready(function () {
                     appState.votosNulo++;
                 }
 
+                appState.votosConfirmadosNoCargo++;
                 atualizarStatusVotos();
-                mostrarMensagemSucesso();
 
-                // Próximo cargo ou fim
+                const aindaFalta = appState.votosConfirmadosNoCargo < votosDoCargo(appState.cargoAtual);
+                mostrarMensagemSucesso(aindaFalta);
+
                 setTimeout(() => {
-                    proximoCargo();
-                }, 3000);
+                    if (aindaFalta) {
+                        appState.numeroDigitado = '';
+                        appState.candidatoSelecionado = null;
+                        appState.fase = 'digitacao';
+                        mostrarTelaDigitacao();
+                    } else {
+                        proximoCargo();
+                    }
+                }, aindaFalta ? 1500 : 3000);
             },
             error: function (error) {
                 console.error('Erro ao registrar voto:', error);
@@ -362,12 +447,19 @@ $(document).ready(function () {
         });
     }
 
-    function mostrarMensagemSucesso() {
+    function mostrarMensagemSucesso(proximoNoMesmoCargo) {
+        const totalVotos = votosDoCargo(appState.cargoAtual);
+        const titulo = totalVotos > 1
+            ? `VOTO ${appState.votosConfirmadosNoCargo} DE ${totalVotos} CONFIRMADO`
+            : 'VOTO CONFIRMADO';
+        const texto = proximoNoMesmoCargo
+            ? 'Digite o número do próximo candidato'
+            : 'Seu voto foi registrado com segurança';
         let html = `
             <div class="mensagem-voto sucesso fade-in">
                 <i class="fas fa-check-circle"></i>
-                <h3>VOTO CONFIRMADO</h3>
-                <p>Seu voto foi registrado com segurança</p>
+                <h3>${titulo}</h3>
+                <p>${texto}</p>
             </div>
         `;
 

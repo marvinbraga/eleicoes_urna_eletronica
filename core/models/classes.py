@@ -2,7 +2,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class Partido(BaseModel):
@@ -11,10 +11,64 @@ class Partido(BaseModel):
     nome: str = Field(..., description="Nome completo do partido")
 
 
+# Quantidade de dígitos do número do candidato na urna (padrão TSE).
+DIGITOS_POR_CARGO = {
+    "presidente": 2,
+    "governador": 2,
+    "senador": 3,
+    "deputado federal": 4,
+    "deputado estadual": 5,
+    "deputado distrital": 5,
+    "prefeito": 2,
+    "vereador": 5,
+}
+
+# Votos que o eleitor dá no cargo. No Senado da renovação de 2/3 são 2; na de 1/3, informe 1.
+VOTOS_POR_ELEITOR = {
+    "presidente": 1,
+    "governador": 1,
+    "senador": 2,
+    "deputado federal": 1,
+    "deputado estadual": 1,
+    "deputado distrital": 1,
+    "prefeito": 1,
+    "vereador": 1,
+}
+
+
 class Cargo(BaseModel):
     id: int = Field(..., description="ID único do cargo")
     nome: str = Field(..., description="Nome do cargo")
     eleicao: int = Field(..., description="ID da eleição a qual o cargo pertence")
+    numero_digitos: int = Field(
+        ...,
+        ge=1,
+        le=5,
+        description="Quantidade de dígitos do número do candidato neste cargo",
+    )
+    votos_por_eleitor: int = Field(
+        ...,
+        ge=1,
+        le=2,
+        description="Quantos candidatos o eleitor escolhe neste cargo",
+    )
+
+    @model_validator(mode="before")
+    @classmethod
+    def completar_regras_da_urna(cls, data):
+        if not isinstance(data, dict):
+            return data
+        nome = str(data.get("nome", "")).strip().casefold()
+        preenchido = dict(data)
+        if preenchido.get("numero_digitos") in (None, ""):
+            digitos = DIGITOS_POR_CARGO.get(nome)
+            if digitos is not None:
+                preenchido["numero_digitos"] = digitos
+        if preenchido.get("votos_por_eleitor") in (None, ""):
+            votos = VOTOS_POR_ELEITOR.get(nome)
+            if votos is not None:
+                preenchido["votos_por_eleitor"] = votos
+        return preenchido
 
 
 class Eleicao(BaseModel):

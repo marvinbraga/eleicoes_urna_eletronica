@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, UploadFile, File, HTTPException, Request, status, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from loguru import logger
@@ -89,6 +89,11 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # Montar o diretório de arquivos estáticos
 app.mount("/static", StaticFiles(directory="backend/static"), name="static")
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    return FileResponse("backend/static/favicon.ico")
 
 # Diretório para salvar os arquivos de chave
 UPLOAD_DIRECTORY = "uploaded_keys"
