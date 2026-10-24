@@ -393,7 +393,7 @@ async def upload_keys(cryptography_key, private_key, election_data):
 ### 1. Instalar Dependências
 ```bash
 cd /home/user/eleicoes_urna_eletronica
-poetry install
+uv sync
 ```
 
 ### 2. Configurar Variáveis de Ambiente

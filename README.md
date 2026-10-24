@@ -41,8 +41,8 @@ Sistema de votação eletrônica desenvolvido em Python com FastAPI, implementan
 
 ## 📋 Pré-requisitos
 
-- Python 3.10+
-- Poetry (gerenciador de dependências)
+- Python 3.15
+- uv (gerenciador de dependências)
 - Redis (para armazenamento em cache)
 - Docker e Docker Compose (opcional)
 
@@ -57,9 +57,14 @@ cd eleicoes_urna_eletronica
 
 ### 2. Instalar dependências
 
+É preciso ter o [uv](https://docs.astral.sh/uv/) instalado. O arquivo `.python-version` já fixa a série 3.15 (o uv instala o patch mais recente dessa série). Para gravá-lo de novo:
+
 ```bash
-poetry install
+uv python pin 3.15
+uv sync
 ```
+
+`uv sync` cria o `.venv` e instala as dependências. `uv run` dispensa ativar o ambiente.
 
 ### 3. Configurar variáveis de ambiente
 
@@ -88,7 +93,7 @@ redis-server
 ### Iniciar o servidor
 
 ```bash
-poetry run uvicorn backend.app:app --host 0.0.0.0 --port 7000 --reload
+uv run uvicorn backend.app:app --host 0.0.0.0 --port 7000 --reload
 ```
 
 ### Acessar a interface web
@@ -118,19 +123,19 @@ Abra o navegador em: `http://localhost:7000`
 ### Executar todos os testes
 
 ```bash
-poetry run pytest tests/ -v
+uv run pytest tests/ -v
 ```
 
 ### Executar testes específicos
 
 ```bash
-poetry run pytest tests/test_voting_system.py -v
+uv run pytest tests/test_voting_system.py -v
 ```
 
 ### Executar testes com cobertura
 
 ```bash
-poetry run pytest tests/ --cov=core --cov=backend --cov-report=html
+uv run pytest tests/ --cov=core --cov=backend --cov-report=html
 ```
 
 ## 📁 Estrutura do Projeto
@@ -242,11 +247,12 @@ redis-server
 ### Erro ao importar módulos
 
 ```bash
-# Certifique-se de estar usando o ambiente virtual Poetry
-poetry shell
+# Ativar o ambiente não é obrigatório: `uv run` dispensa isso.
+# Se quiser entrar no shell:
+source .venv/bin/activate
 
 # Reinstale as dependências
-poetry install
+uv sync
 ```
 
 ### Porta 7000 já em uso
@@ -256,7 +262,7 @@ poetry install
 BACKEND_URL=http://localhost:8000
 
 # E ao iniciar o servidor:
-poetry run uvicorn backend.app:app --host 0.0.0.0 --port 8000
+uv run uvicorn backend.app:app --host 0.0.0.0 --port 8000
 ```
 
 ## 📝 TODO / Melhorias Futuras
@@ -304,7 +310,7 @@ Desenvolvido com ❤️ para garantir eleições seguras e transparentes.
 As chaves em `resources/` **não são versionadas**. Gere localmente:
 
 ```bash
-poetry run python scripts/generate_election_keys.py
+uv run python scripts/generate_election_keys.py
 # ou
 openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out resources/private_key.pem
 python -c "from cryptography.fernet import Fernet; open('resources/cryptography_key.pem','w').write(Fernet.generate_key().decode())"

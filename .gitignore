@@ -141,9 +141,6 @@ cython_debug/
 # Pycharm
 .idea/
 
-# Poetry
-poetry.lock
-
 uploaded_keys/resources/private_key.pem
 resources/cryptography_key.pem
 *.pem

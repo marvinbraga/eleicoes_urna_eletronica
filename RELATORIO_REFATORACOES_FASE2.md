@@ -555,7 +555,7 @@ TESTANDO REFATORAÇÕES - FASE 2
 ## PRÓXIMOS PASSOS RECOMENDADOS
 
 ### Curto Prazo
-1. ✅ Instalar dependências: `poetry install`
+1. ✅ Instalar dependências: `uv sync`
 2. ✅ Executar testes completos: `pytest tests/`
 3. ✅ Atualizar documentação do projeto
 
@@ -578,11 +578,13 @@ TESTANDO REFATORAÇÕES - FASE 2
 ### Dependências Necessárias (pyproject.toml)
 
 ```toml
-[tool.poetry.dependencies]
-python = "^3.10"
-pydantic = "^2.7.2"  # Já estava presente
-# Recomendado adicionar:
-pydantic-settings = "^2.0.0"  # Para VotingSystemSettings
+[project]
+requires-python = ">=3.15"
+dependencies = [
+    "pydantic>=2.7.2,<3",  # Já estava presente
+    # Recomendado adicionar:
+    "pydantic-settings>=2.0.0,<3",  # Para VotingSystemSettings
+]
 ```
 
 **Nota:** A implementação atual usa `dataclasses` como alternativa ao Pydantic Settings, garantindo funcionamento sem dependências adicionais.

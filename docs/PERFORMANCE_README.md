@@ -50,7 +50,7 @@
 ### 1. Instalar Dependências
 
 ```bash
-poetry install
+uv sync
 ```
 
 ### 2. Executar Benchmark
@@ -376,7 +376,7 @@ Inclui:
 ## ✅ Checklist de Migração
 
 - [ ] Backup do Redis
-- [ ] Instalar dependências: `poetry install`
+- [ ] Instalar dependências: `uv sync`
 - [ ] Executar benchmark: `python benchmark_performance.py`
 - [ ] Executar testes: `pytest tests/test_performance.py -v`
 - [ ] Testar backend otimizado localmente
@@ -411,7 +411,7 @@ curl -X POST http://localhost:8000/cache/clear
 
 ```bash
 # Reinstalar dependências
-poetry install --no-cache
+uv sync --reinstall
 ```
 
 ---

@@ -548,7 +548,7 @@ async def upload_keys(cryptography_key, private_key, election_data):
 
 ### 1. Instalar Dependências:
 ```bash
-poetry install
+uv sync
 ```
 
 ### 2. Configurar Ambiente:

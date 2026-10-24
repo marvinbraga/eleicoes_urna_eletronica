@@ -121,7 +121,7 @@ POST /cache/clear
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 1. Instalar dependências:
-   poetry install
+   uv sync
 
 2. Executar benchmark:
    python benchmark_performance.py

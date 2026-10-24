@@ -1,26 +1,27 @@
-FROM python:3.10-slim-bookworm as python
+FROM python:3.15.1-slim-bookworm AS python
 
-FROM python as python-build-stage
+FROM python AS python-build-stage
+
+COPY --from=ghcr.io/astral-sh/uv:0.11.27 /uv /uvx /bin/
 
 RUN apt-get update && apt-get install --no-install-recommends -y \
-   build-essential
+   build-essential \
+   && rm -rf /var/lib/apt/lists/*
 
-COPY ./pyproject.toml ./
+WORKDIR /app
 
-RUN apt-get update -y && apt-get upgrade -y
+ENV UV_PYTHON_DOWNLOADS=never
 
-RUN pip install --upgrade pip && \
-    pip install poetry && \
-    poetry export --without-hashes -f requirements.txt -o requirements.txt && \
-    pip uninstall -y poetry
+COPY ./pyproject.toml ./uv.lock ./
 
-RUN pip wheel --wheel-dir /usr/src/app/wheels \
-   -r requirements.txt
+RUN uv sync --frozen --no-dev --no-install-project --python /usr/local/bin/python
 
-FROM python as python-run-stage
+FROM python AS python-run-stage
 
 ARG APP_HOME=/app
-ENV PYTHONPATH /app
+ENV PYTHONPATH=/app
+ENV PATH="/app/.venv/bin:$PATH"
+ENV VIRTUAL_ENV=/app/.venv
 
 WORKDIR ${APP_HOME}
 
@@ -30,10 +31,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
     && rm -rf /var/lib/apt/lists/*
 
-COPY --from=python-build-stage /usr/src/app/wheels /wheels/
-
-RUN pip install --no-cache-dir --no-index --find-links=/wheels/ /wheels/* \
-   && rm -rf /wheels/
+COPY --from=python-build-stage /app/.venv /app/.venv
 
 # Copie o restante do código da aplicação para o diretório de trabalho
 COPY . .

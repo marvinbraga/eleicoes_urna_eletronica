@@ -25,7 +25,7 @@ O projeto está organizado em:
 ## Stack Tecnológica
 
 ### Backend
-- **Python 3.10+**
+- **Python 3.15**
 - **FastAPI**: Framework web moderno e rápido
 - **Pydantic**: Validação de dados
 - **Redis**: Armazenamento em cache e dados de sessão
@@ -41,7 +41,7 @@ O projeto está organizado em:
 - **qrcode**: Geração de QR Codes
 
 ### Desenvolvimento
-- **Poetry**: Gerenciador de dependências
+- **uv**: Gerenciador de dependências
 - **pytest**: Testes
 - **flake8**: Linting
 - **coverage/pytest-cov**: Cobertura de testes
@@ -50,7 +50,7 @@ O projeto está organizado em:
 ## Dependências Principais
 
 ```toml
-python = "^3.10"
+requires-python = ">=3.15"
 fastapi = "^0.111.0"
 pydantic = "^2.7.2"
 cryptography = "^42.0.7"
@@ -64,32 +64,32 @@ loguru = "^0.7.2"
 
 ### Instalação
 ```bash
-poetry install
+uv sync
 ```
 
 ### Executar o sistema (exemplo standalone)
 ```bash
-poetry run python core/main.py
+uv run python core/main.py
 ```
 
 ### Executar o backend
 ```bash
-poetry run uvicorn backend.app:app --host 0.0.0.0 --port 7000 --reload
+uv run uvicorn backend.app:app --host 0.0.0.0 --port 7000 --reload
 ```
 
 ### Executar testes
 ```bash
-poetry run pytest
+uv run pytest
 ```
 
 ### Cobertura de testes
 ```bash
-poetry run pytest --cov=core --cov=backend --cov-report=html
+uv run pytest --cov=core --cov=backend --cov-report=html
 ```
 
 ### Linting
 ```bash
-poetry run flake8 core/ backend/
+uv run flake8 core/ backend/
 ```
 
 ### Docker

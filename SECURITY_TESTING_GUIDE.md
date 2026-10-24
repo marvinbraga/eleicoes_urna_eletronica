@@ -9,7 +9,7 @@ Este documento contém testes práticos para validar todas as melhorias de segur
 ### 1. Instalar Dependências
 ```bash
 cd /home/user/eleicoes_urna_eletronica
-poetry install
+uv sync
 ```
 
 ### 2. Configurar Ambiente
@@ -26,7 +26,7 @@ nano .env
 docker-compose up redis
 
 # Terminal 2: Iniciar aplicação
-poetry run uvicorn backend.app:app --reload --port 7000
+uv run uvicorn backend.app:app --reload --port 7000
 ```
 
 ---
@@ -513,13 +513,13 @@ EOF
 ### Teste 24: Executar Todos os Testes
 ```bash
 # Executar suite de testes do pytest
-poetry run pytest tests/ -v
+uv run pytest tests/ -v
 
 # Executar apenas testes de API
-poetry run pytest tests/test_api.py -v
+uv run pytest tests/test_api.py -v
 
 # Executar com coverage
-poetry run pytest tests/ --cov=backend --cov=core --cov-report=html
+uv run pytest tests/ --cov=backend --cov=core --cov-report=html
 ```
 
 ### Teste 25: Testes de Segurança Específicos
@@ -572,7 +572,7 @@ def test_file_upload_validation(client):
 EOF
 
 # Executar testes de segurança
-poetry run pytest tests/test_security.py -v
+uv run pytest tests/test_security.py -v
 ```
 
 ---
@@ -657,7 +657,7 @@ Após executar todos os testes, você deve ter:
 ### Problema: "Module not found"
 ```bash
 # Solução: Instalar dependências
-poetry install
+uv sync
 ```
 
 ### Problema: "Connection refused" no Redis
@@ -676,7 +676,7 @@ chmod 600 uploaded_keys/*.pem
 ### Problema: Rate limit não funciona
 ```bash
 # Solução: Verificar que slowapi está instalado
-poetry show slowapi
+uv pip show slowapi
 
 # Verificar configuração no app.py
 grep "limiter" backend/app.py
@@ -690,7 +690,7 @@ Se encontrar problemas:
 
 1. Verificar logs: `tail -f logs/app.log`
 2. Verificar variáveis de ambiente: `cat .env`
-3. Verificar dependências: `poetry show`
+3. Verificar dependências: `uv tree`
 4. Consultar documentação: `SECURITY_IMPROVEMENTS.md`
 
 ---

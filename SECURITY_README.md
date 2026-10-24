@@ -42,7 +42,7 @@ backend/app.py                       - ~618 linhas (reescrito)
 ### 1. Instalar Dependências
 ```bash
 cd /home/user/eleicoes_urna_eletronica
-poetry install
+uv sync
 ```
 
 ### 2. Configurar Ambiente
@@ -59,7 +59,7 @@ echo "JWT_SECRET_KEY=$(openssl rand -hex 32)" >> .env
 
 ### 4. Iniciar Aplicação
 ```bash
-poetry run uvicorn backend.app:app --reload --port 7000
+uv run uvicorn backend.app:app --reload --port 7000
 ```
 
 ### 5. Testar Login
@@ -219,7 +219,7 @@ Para informações detalhadas, consulte:
 
 **Module not found**
 ```bash
-poetry install
+uv sync
 ```
 
 **Redis connection refused**
@@ -312,22 +312,22 @@ O sistema de urna eletrônica agora possui:
 
 ```bash
 # Instalar
-poetry install
+uv sync
 
 # Executar
-poetry run uvicorn backend.app:app --reload --port 7000
+uv run uvicorn backend.app:app --reload --port 7000
 
 # Testar
-poetry run pytest tests/ -v
+uv run pytest tests/ -v
 
 # Coverage
-poetry run pytest --cov=backend --cov=core --cov-report=html
+uv run pytest --cov=backend --cov=core --cov-report=html
 
 # Lint
-poetry run flake8 backend/ core/
+uv run flake8 backend/ core/
 
 # Verificar segurança
-poetry run safety check
+uv run safety check
 ```
 
 ---

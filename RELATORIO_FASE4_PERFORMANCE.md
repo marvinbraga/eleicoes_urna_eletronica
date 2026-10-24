@@ -491,10 +491,10 @@ BENCHMARK: BLOCKCHAIN OPTIMIZATIONS
 #### 2. Instalação
 ```bash
 # Atualizar dependências
-poetry install
+uv sync
 
 # Verificar instalação
-poetry show uvicorn cachetools orjson
+uv pip show uvicorn cachetools orjson
 ```
 
 #### 3. Testes

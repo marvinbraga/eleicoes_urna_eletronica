@@ -24,7 +24,7 @@ confiável para o processo de votação, garantindo a integridade dos votos e a 
 - Python 3.x
 - Pydantic
 - Cryptography
-- Poetry (gerenciador de dependências e ambiente virtual)
+- uv (gerenciador de dependências e ambiente virtual)
 
 ## Estrutura do projeto
 
@@ -70,25 +70,26 @@ Aqui está uma explicação de cada diretório e arquivo:
   - `security.py`: Implementação das classes KeyManager e CryptographyKeyManager para gerenciamento das 
     chaves de criptografia. 
 - `main.py`: Arquivo principal que contém o exemplo de uso do sistema de votação.
-- `pyproject.toml`: Arquivo de configuração do Poetry para gerenciar as dependências do projeto.
+- `pyproject.toml`: Arquivo de configuração do uv para gerenciar as dependências do projeto.
 - `readme.md`: Arquivo de documentação do projeto.
 
 ## Configuração e execução
 
-1. Certifique-se de ter o Python ^3.10 e o Poetry instalados em seu sistema.
+1. Certifique-se de ter o Python 3.15 e o uv instalados em seu sistema.
 2. Clone este repositório em sua máquina local.
 3. Navegue até o diretório raiz do projeto.
-4. Execute o seguinte comando para instalar as dependências do projeto:
+4. O arquivo `.python-version` já fixa a série 3.15. Execute os seguintes comandos para instalar as dependências do projeto:
    ```bash
-   poetry install
+   uv python pin 3.15
+   uv sync
    ```
-5. Ative o ambiente virtual criado pelo Poetry:
+5. Ativar o ambiente virtual não é obrigatório, porque `uv run` dispensa isso. Se quiser entrar no shell:
    ```bash
-   poetry shell
+   source .venv/bin/activate
    ```
 6. Execute o arquivo `main.py` para iniciar o exemplo de uso do sistema de votação:
    ```bash
-   python main.py
+   uv run python core/main.py
    ```
 
 ## Licença

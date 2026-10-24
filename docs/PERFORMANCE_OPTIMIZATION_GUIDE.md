@@ -437,7 +437,7 @@ uvicorn backend.app_optimized:app --reload --host 0.0.0.0 --port 8000
 ### Checklist de Migração
 
 - [ ] Backup do banco Redis
-- [ ] Instalar novas dependências: `poetry install`
+- [ ] Instalar novas dependências: `uv sync`
 - [ ] Testar endpoints básicos
 - [ ] Verificar /health e /metrics
 - [ ] Testar fluxo completo de votação
