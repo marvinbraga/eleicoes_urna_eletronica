@@ -111,7 +111,7 @@ class CriptografiaService:
         :param chave_criptografia_path: O caminho para o arquivo da chave de criptografia.
         """
         self.chave_privada = self._carregar_chave_privada(chave_privada_path)
-        self.chave_publica = self.chave_privada.***EDUZZ_PUBLIC_KEY_REDACTED***()
+        self.chave_publica = self.chave_privada.public_key()
         self.cifra = self._carregar_cifra(chave_criptografia_path)
 
     def _carregar_chave_privada(self, chave_privada_path: str):

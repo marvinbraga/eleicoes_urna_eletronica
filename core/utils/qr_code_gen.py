@@ -125,6 +125,13 @@ class QrCode:
         return dict(decoded_data[0]._asdict())
 
 
+class QRCodeService:
+    """Gera a imagem do QR em base64 a partir do texto do voto."""
+
+    def gerar_qr_code(self, data: str) -> str:
+        return QrCode(data=data).as_base64()
+
+
 if __name__ == "__main__":
     import os
 
